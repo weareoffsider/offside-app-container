@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "noImplicitAny": true,
+    "listFiles": true,
+    "diagnostics": true,
+    "moduleResolution": "node",
+    "allowSyntheticDefaultImports": true,
+    "target": "es6"
+  },
+  "exclude": [
+    "build",
+    "dist",
+    "node_modules"
+  ]
+}

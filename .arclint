@@ -1,0 +1,13 @@
+{
+  "exclude": [
+    "(^build)"
+  ],
+  "linters": {
+    "json": {
+      "type": "json",
+      "include": "(\\.json$)"
+    }
+  }
+}
+
+

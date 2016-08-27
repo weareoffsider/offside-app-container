@@ -1,0 +1,8 @@
+{
+  "name": "offsider-app-container",
+  "dependencies": {},
+  "globalDependencies": {
+    "i18next": "registry:dt/i18next#2.3.4+20160803175212",
+    "numeral": "github:retyped/numeraljs-tsd-ambient/numeraljs.d.ts"
+  }
+}

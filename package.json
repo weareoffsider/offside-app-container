@@ -1,0 +1,24 @@
+{
+  "name": "offsider-app-container",
+  "version": "0.1.0",
+  "description": "Container System for Single Page Applications",
+  "typings": "./typings/index.d.ts",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Offsider Software",
+  "license": "MIT",
+  "dependencies": {
+    "i18next": "^3.4.1",
+    "moment": "^2.14.1",
+    "numeral": "^1.5.3",
+    "route-parser": "0.0.5"
+  },
+  "devDependencies": {
+    "gulp": "^3.9.1",
+    "gulp-typescript": "^2.13.6",
+    "gulp-using": "^0.1.1",
+    "gulp-watch": "^4.3.9"
+  }
+}
