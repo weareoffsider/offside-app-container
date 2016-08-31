@@ -19,6 +19,10 @@
     "gulp": "^3.9.1",
     "gulp-typescript": "^2.13.6",
     "gulp-using": "^0.1.1",
-    "gulp-watch": "^4.3.9"
+    "gulp-watch": "^4.3.9",
+    "rollup": "^0.34.11",
+    "rollup-plugin-node-resolve": "^2.0.0",
+    "rollup-stream": "^1.12.0",
+    "vinyl-source-stream": "^1.1.0"
   }
 }

@@ -1,5 +1,5 @@
-declare var require: Function;
-var Route: any = require("route-parser");
+/// <reference path="./RouteParser.d.ts" />
+import Route from "route-parser"
 
 /* RouteTable
  *
