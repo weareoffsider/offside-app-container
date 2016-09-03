@@ -1,4 +1,3 @@
-/// <reference path="./RouteParser.d.ts" />
 import Route from "route-parser"
 
 /* RouteTable

@@ -1,10 +1,12 @@
-import View, {ViewOptions} from './View'
-import Chrome, {ChromeOptions} from './Chrome'
+import ViewDefinition, {ViewOptions} from './View'
+import ChromeDefinition, {ChromeOptions} from './Chrome'
 import RouteTable from './RouteTable'
 
 export default class UIContext<UIData, UIChromeData, ViewData, ChromeData> {
-  private viewSet: {[key: string]: View<UIData, UIChromeData, ViewData>}
-  private chromeSet: {[key: string]: Chrome<UIData, UIChromeData, ChromeData>}
+  private viewSet:
+    {[key: string]: ViewDefinition<UIData, UIChromeData, ViewData>}
+  private chromeSet:
+    {[key: string]: ChromeDefinition<UIData, UIChromeData, ChromeData>}
   private routeTable: RouteTable
   private renderOrder: Array<string>
 
@@ -18,14 +20,14 @@ export default class UIContext<UIData, UIChromeData, ViewData, ChromeData> {
     key: string,
     viewOptions: ViewOptions<UIData, UIChromeData, ViewData>
   ) {
-    this.viewSet[key] = new View(viewOptions)
+    this.viewSet[key] = new ViewDefinition(viewOptions)
   }
 
   addChrome (
     key: string,
     chromeOptions: ChromeOptions<UIData, UIChromeData, ChromeData>
   ) {
-    this.chromeSet[key] = new Chrome(chromeOptions)
+    this.chromeSet[key] = new ChromeDefinition(chromeOptions)
   }
 
   addRoute (routePath: string, viewName: string, routeName?: string) {
@@ -34,5 +36,10 @@ export default class UIContext<UIData, UIChromeData, ViewData, ChromeData> {
 
   setRenderOrder (newOrder: Array<string>) {
     this.renderOrder = newOrder
+  }
+
+  initialize (container: Element) {
+    console.log("UIContext INIT")
+    container.textContent = "Render here."
   }
 }

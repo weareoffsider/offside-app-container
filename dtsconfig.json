@@ -2,15 +2,17 @@
   "compilerOptions": {
     "noImplicitAny": true,
     "listFiles": true,
+    "declaration": true,
     "diagnostics": true,
     "moduleResolution": "node",
+    "outFile": "offside-app-container.js",
     "allowSyntheticDefaultImports": true,
     "target": "es6"
   },
   "exclude": [
     "build",
-    "example",
     "dist",
+    "example",
     "node_modules"
   ]
 }
