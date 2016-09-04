@@ -1,18 +1,25 @@
-import ViewDefinition, {ViewOptions} from './View'
-import ChromeDefinition, {ChromeOptions} from './Chrome'
+import ViewDefinition, {ViewOptions, View} from './View'
+import ChromeDefinition, {ChromeOptions, Chrome} from './Chrome'
 import RouteTable from './RouteTable'
 
 export default class UIContext<UIData, UIChromeData, ViewData, ChromeData> {
+  private contextKey: string
   private viewSet:
     {[key: string]: ViewDefinition<UIData, UIChromeData, ViewData>}
   private chromeSet:
     {[key: string]: ChromeDefinition<UIData, UIChromeData, ChromeData>}
+  private activeChrome:
+    {[key: string]: Chrome<UIData, UIChromeData, ChromeData>}
   private routeTable: RouteTable
+  private viewContainer: Element
+  private activeView:
+    {[route: string]: View<UIData, UIChromeData, ViewData>}
   private renderOrder: Array<string>
 
   constructor (urlBase: string) {
     this.viewSet = {}
     this.chromeSet = {}
+    this.activeChrome = {}
     this.routeTable = new RouteTable()
   }
 
@@ -38,8 +45,29 @@ export default class UIContext<UIData, UIChromeData, ViewData, ChromeData> {
     this.renderOrder = newOrder
   }
 
-  initialize (container: Element) {
-    console.log("UIContext INIT")
-    container.textContent = "Render here."
+  setContextKey (contextKey: string) {
+    this.contextKey = contextKey
+  }
+
+  initialize (container: Element, props: UIData, chromeProps: UIChromeData) {
+    console.log("UIContext INIT", this.renderOrder, this.chromeSet)
+    this.renderOrder.forEach((name) => {
+      if (name !== "**views") {
+        const chromeContainer = document.createElement("span")
+        chromeContainer.id = `${this.contextKey}-${name}`
+        container.appendChild(chromeContainer)
+
+        this.activeChrome[name] = new Chrome(
+            chromeContainer,
+            this.chromeSet[name].getOptions()
+        )
+        this.activeChrome[name].initialize(props, chromeProps)
+      } else {
+        const viewsContainer = document.createElement("span")
+        viewsContainer.id = `${this.contextKey}-viewsContainer`
+        container.appendChild(viewsContainer)
+        this.viewContainer = viewsContainer
+      }
+    })
   }
 }

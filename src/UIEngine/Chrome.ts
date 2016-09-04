@@ -15,6 +15,10 @@ export interface ChromeOptions<UIData, UIChromeData, ChromeData> {
 export default class ChromeDefinition<UIData, UIChromeData, ChromeData> {
   constructor (private options: ChromeOptions<UIData, UIChromeData, ChromeData>) {
   }
+
+  getOptions () {
+    return this.options
+  }
 }
 
 export class Chrome<UIData, UIChromeData, ChromeData> {

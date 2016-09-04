@@ -21,9 +21,13 @@ export default class OffsideAppContainer<EngineData, UIData, UIChromeData> {
     this.uiContexts[name] = context
   }
 
-  loadUIContext (container: Element, contextName: string) {
+  loadUIContext (contextName: string) {
     this.activeUIContext = this.uiContexts[contextName]
-    this.activeUIContext.initialize(container)
+    this.activeUIContext.setContextKey(contextName)
+  }
+
+  initializeUI (container: Element, props: UIData, chromeProps: UIChromeData) {
+    this.activeUIContext.initialize(container, props, chromeProps)
   }
 }
 

@@ -3,6 +3,7 @@
     "noImplicitAny": true,
     "listFiles": true,
     "diagnostics": true,
+    "jsx": "React",
     "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,
     "target": "es6"

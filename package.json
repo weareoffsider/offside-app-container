@@ -27,6 +27,7 @@
     "lodash": "^4.15.0",
     "merge-stream": "^1.0.0",
     "merge2": "^1.0.2",
+    "react": "^15.3.1",
     "rollup": "^0.34.11",
     "rollup-plugin-babel": "^2.6.1",
     "rollup-plugin-json": "^2.0.1",

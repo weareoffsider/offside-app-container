@@ -155,11 +155,21 @@ var View = function () {
     return View;
 }();
 
-var ChromeDefinition = function ChromeDefinition(options) {
-    classCallCheck(this, ChromeDefinition);
+var ChromeDefinition = function () {
+    function ChromeDefinition(options) {
+        classCallCheck(this, ChromeDefinition);
 
-    this.options = options;
-};
+        this.options = options;
+    }
+
+    createClass(ChromeDefinition, [{
+        key: "getOptions",
+        value: function getOptions() {
+            return this.options;
+        }
+    }]);
+    return ChromeDefinition;
+}();
 
 var Chrome = function () {
     function Chrome(container, options) {
@@ -268,6 +278,7 @@ var UIContext = function () {
 
         this.viewSet = {};
         this.chromeSet = {};
+        this.activeChrome = {};
         this.routeTable = new RouteTable();
     }
 
@@ -292,10 +303,30 @@ var UIContext = function () {
             this.renderOrder = newOrder;
         }
     }, {
+        key: 'setContextKey',
+        value: function setContextKey(contextKey) {
+            this.contextKey = contextKey;
+        }
+    }, {
         key: 'initialize',
-        value: function initialize(container) {
-            console.log("UIContext INIT");
-            container.textContent = "Render here.";
+        value: function initialize(container, props, chromeProps) {
+            var _this = this;
+
+            console.log("UIContext INIT", this.renderOrder, this.chromeSet);
+            this.renderOrder.forEach(function (name) {
+                if (name !== "**views") {
+                    var chromeContainer = document.createElement("span");
+                    chromeContainer.id = _this.contextKey + '-' + name;
+                    container.appendChild(chromeContainer);
+                    _this.activeChrome[name] = new Chrome(chromeContainer, _this.chromeSet[name].getOptions());
+                    _this.activeChrome[name].initialize(props, chromeProps);
+                } else {
+                    var viewsContainer = document.createElement("span");
+                    viewsContainer.id = _this.contextKey + '-viewsContainer';
+                    container.appendChild(viewsContainer);
+                    _this.viewContainer = viewsContainer;
+                }
+            });
         }
     }]);
     return UIContext;
@@ -320,9 +351,14 @@ var OffsideAppContainer = function () {
         }
     }, {
         key: 'loadUIContext',
-        value: function loadUIContext(container, contextName) {
+        value: function loadUIContext(contextName) {
             this.activeUIContext = this.uiContexts[contextName];
-            this.activeUIContext.initialize(container);
+            this.activeUIContext.setContextKey(contextName);
+        }
+    }, {
+        key: 'initializeUI',
+        value: function initializeUI(container, props, chromeProps) {
+            this.activeUIContext.initialize(container, props, chromeProps);
         }
     }]);
     return OffsideAppContainer;

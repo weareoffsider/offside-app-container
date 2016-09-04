@@ -52,6 +52,7 @@ declare module "UIEngine/Chrome" {
     export default class ChromeDefinition<UIData, UIChromeData, ChromeData> {
         private options;
         constructor(options: ChromeOptions<UIData, UIChromeData, ChromeData>);
+        getOptions(): ChromeOptions<UIData, UIChromeData, ChromeData>;
     }
     export class Chrome<UIData, UIChromeData, ChromeData> {
         private container;
@@ -84,16 +85,21 @@ declare module "UIEngine/UIContext" {
     import { ViewOptions } from "UIEngine/View";
     import { ChromeOptions } from "UIEngine/Chrome";
     export default class UIContext<UIData, UIChromeData, ViewData, ChromeData> {
+        private contextKey;
         private viewSet;
         private chromeSet;
+        private activeChrome;
         private routeTable;
+        private viewContainer;
+        private activeView;
         private renderOrder;
         constructor(urlBase: string);
         addView(key: string, viewOptions: ViewOptions<UIData, UIChromeData, ViewData>): void;
         addChrome(key: string, chromeOptions: ChromeOptions<UIData, UIChromeData, ChromeData>): void;
         addRoute(routePath: string, viewName: string, routeName?: string): void;
         setRenderOrder(newOrder: Array<string>): void;
-        initialize(container: Element): void;
+        setContextKey(contextKey: string): void;
+        initialize(container: Element, props: UIData, chromeProps: UIChromeData): void;
     }
 }
 declare module "offside-app-container" {
@@ -108,7 +114,8 @@ declare module "offside-app-container" {
         constructor();
         setupLocalisation(translationResources: any): void;
         addUIContext<ViewData, ChromeData>(name: string, context: UIContext<UIData, UIChromeData, ViewData, ChromeData>): void;
-        loadUIContext(container: Element, contextName: string): void;
+        loadUIContext(contextName: string): void;
+        initializeUI(container: Element, props: UIData, chromeProps: UIChromeData): void;
     }
     export { UIContext, Localize };
 }

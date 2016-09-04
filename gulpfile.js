@@ -101,7 +101,7 @@ gulp.task("example:webpack", function () {
 
 gulp.task("default", ["scripts", "definitions", "rollup"], function () {
   gulp.watch("src/**/*.ts", ["scripts", "definitions"])
-  gulp.watch("example/**/*.ts", ["example:scripts"])
+  gulp.watch("example/**/*.{ts,tsx}", ["example:scripts"])
   gulp.watch("example/**/*.html", ["example:html"])
   gulp.watch("build/**/*.js", ["rollup", "example:rollup"])
   gulp.watch("build/example/ExampleApp.node.js", ["example:webpack"])
