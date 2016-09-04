@@ -44,7 +44,11 @@ var LocalizeSpawner = function () {
         value: function loadLocale(langCode) {
             var i18n = i18next.init({
                 lng: langCode,
-                resources: this.translationResources
+                resources: this.translationResources,
+                parseMissingKeyHandler: function parseMissingKeyHandler(key) {
+                    console.log("langCode missing: ", key);
+                    return "{l10n absent: " + key + "}";
+                }
             });
             var localMoment = moment().locale(langCode);
             return new LocalizeContext(langCode, i18n);
@@ -59,6 +63,14 @@ var LocalizeContext = function () {
 
         this.langCode = langCode;
         this.i18n = i18n;
+        this.translate = this.translate.bind(this);
+        this.customDatetime = this.customDatetime.bind(this);
+        this.time = this.time.bind(this);
+        this.fullDatetime = this.fullDatetime.bind(this);
+        this.abbrDatetime = this.abbrDatetime.bind(this);
+        this.fullDate = this.fullDate.bind(this);
+        this.abbrDate = this.abbrDate.bind(this);
+        this.numericDate = this.numericDate.bind(this);
     }
 
     createClass(LocalizeContext, [{
@@ -110,24 +122,40 @@ var LocalizeContext = function () {
     return LocalizeContext;
 }();
 
-var ViewDefinition = function ViewDefinition(options) {
-    classCallCheck(this, ViewDefinition);
+var ViewDefinition = function () {
+    function ViewDefinition(options) {
+        classCallCheck(this, ViewDefinition);
 
-    this.options = options;
-};
+        this.options = options;
+    }
+
+    createClass(ViewDefinition, [{
+        key: "spawnView",
+        value: function spawnView(container, path) {
+            return new View(container, path, this.options);
+        }
+    }]);
+    return ViewDefinition;
+}();
 
 var View = function () {
-    function View(container, options) {
+    function View(container, viewPath, options) {
         classCallCheck(this, View);
 
         this.container = container;
+        this.viewPath = viewPath;
         this.options = options;
     }
 
     createClass(View, [{
         key: "preLoadData",
         value: function preLoadData(props) {
-            return this.options.preLoad ? this.options.preLoad(props) : Promise.resolve(true);
+            var _this = this;
+
+            return (this.options.preLoad ? this.options.preLoad(props) : Promise.resolve(true)).then(function (value) {
+                _this.loaded = true;
+                return value;
+            });
         }
     }, {
         key: "postLoadData",
@@ -137,12 +165,18 @@ var View = function () {
     }, {
         key: "create",
         value: function create(props, chromeData) {
+            if (!this.loaded) {
+                return chromeData;
+            }
             this.viewData = this.options.createView(this.container, props);
             return this.options.updateChrome ? this.options.updateChrome(props, chromeData, this.viewData) : chromeData;
         }
     }, {
         key: "update",
         value: function update(props, chromeData) {
+            if (!this.loaded) {
+                return chromeData;
+            }
             this.viewData = this.options.updateView(this.container, props, this.viewData);
             return this.options.updateChrome ? this.options.updateChrome(props, chromeData, this.viewData) : chromeData;
         }
@@ -150,6 +184,7 @@ var View = function () {
         key: "destroy",
         value: function destroy(props) {
             this.options.destroyView(this.container, props, this.viewData);
+            this.container.parentNode.removeChild(this.container);
         }
     }]);
     return View;
@@ -253,12 +288,24 @@ var RouteMatcher = function () {
     function RouteMatcher(route, viewName, routeName) {
         classCallCheck(this, RouteMatcher);
 
-        this.routeMatcher = new Route(route);
-        this.viewName = viewName;
-        this.routeName = routeName ? routeName : viewName;
+        if (route && viewName) {
+            this.routeMatcher = new Route(route);
+            this.viewName = viewName;
+            this.routeName = routeName ? routeName : viewName;
+        }
     }
 
     createClass(RouteMatcher, [{
+        key: "attachPath",
+        value: function attachPath(path) {
+            var matcher = new RouteMatcher();
+            matcher.routeMatcher = this.routeMatcher;
+            matcher.viewName = this.viewName;
+            matcher.routeName = this.routeName;
+            matcher.path = path;
+            return matcher;
+        }
+    }, {
         key: "match",
         value: function match(path) {
             return this.routeMatcher.match(path);
@@ -279,6 +326,7 @@ var UIContext = function () {
         this.viewSet = {};
         this.chromeSet = {};
         this.activeChrome = {};
+        this.visibleViews = {};
         this.routeTable = new RouteTable();
     }
 
@@ -298,6 +346,12 @@ var UIContext = function () {
             this.routeTable.addRoute(routePath, viewName, routeName);
         }
     }, {
+        key: 'getMatchFromRoute',
+        value: function getMatchFromRoute(path) {
+            var match = this.routeTable.matchPath(path);
+            return match ? match.attachPath(path) : null;
+        }
+    }, {
         key: 'setRenderOrder',
         value: function setRenderOrder(newOrder) {
             this.renderOrder = newOrder;
@@ -308,25 +362,86 @@ var UIContext = function () {
             this.contextKey = contextKey;
         }
     }, {
+        key: 'setStateGetter',
+        value: function setStateGetter(getter) {
+            this.getLatestAppState = getter;
+        }
+    }, {
         key: 'initialize',
         value: function initialize(container, props, chromeProps) {
             var _this = this;
 
-            console.log("UIContext INIT", this.renderOrder, this.chromeSet);
+            console.log("UIContext INIT", this.renderOrder, this.chromeSet, this.viewSet, props);
+            this.chromeState = chromeProps;
             this.renderOrder.forEach(function (name) {
                 if (name !== "**views") {
-                    var chromeContainer = document.createElement("span");
+                    var chromeContainer = document.createElement("div");
                     chromeContainer.id = _this.contextKey + '-' + name;
                     container.appendChild(chromeContainer);
                     _this.activeChrome[name] = new Chrome(chromeContainer, _this.chromeSet[name].getOptions());
                     _this.activeChrome[name].initialize(props, chromeProps);
                 } else {
-                    var viewsContainer = document.createElement("span");
+                    console.log("render root");
+                    var viewsContainer = document.createElement("div");
                     viewsContainer.id = _this.contextKey + '-viewsContainer';
                     container.appendChild(viewsContainer);
                     _this.viewContainer = viewsContainer;
                 }
             });
+            if (props.route) {
+                this.loadRoute(props.route, props, chromeProps);
+            }
+        }
+    }, {
+        key: 'update',
+        value: function update(state) {
+            var _this2 = this;
+
+            if (state.route.path !== this.activeView.viewPath) {
+                this.loadRoute(state.route, state, this.chromeState);
+            }
+            this.chromeState = this.activeView.update(state, this.chromeState);
+            Object.keys(this.activeChrome).forEach(function (name) {
+                var chrome = _this2.activeChrome[name];
+                chrome.update(state, _this2.chromeState);
+            });
+        }
+    }, {
+        key: 'loadRoute',
+        value: function loadRoute(route, props, chromeProps) {
+            var _this3 = this;
+
+            if (!route.path) {
+                throw new Error("Route views can only be loaded with paths.");
+            }
+            if (this.activeView) {
+                this.exitingView = this.activeView;
+            }
+            var container = document.createElement("div");
+            container.className = this.contextKey + '-' + route.viewName;
+            this.viewContainer.appendChild(container);
+            var view = this.viewSet[route.viewName].spawnView(container, route.path);
+            this.visibleViews[route.path] = view;
+            this.activeView = view;
+            var viewReadyPromise = view.preLoadData(props).then(function (state) {
+                console.log("Creating View", view);
+                view.create(_this3.getLatestAppState(), chromeProps);
+            });
+            console.log("Loading route", route);
+            this.transitionViews(this.activeView, viewReadyPromise, this.exitingView);
+        }
+    }, {
+        key: 'transitionViews',
+        value: function transitionViews(entering, loadingPromise, exiting) {
+            var _this4 = this;
+
+            if (exiting) {
+                var exitContainer = exiting.container;
+                exitContainer.style.opacity = "0.5";
+                loadingPromise.then(function (result) {
+                    exiting.destroy(_this4.getLatestAppState());
+                });
+            }
         }
     }]);
     return UIContext;
@@ -352,13 +467,80 @@ var OffsideAppContainer = function () {
     }, {
         key: 'loadUIContext',
         value: function loadUIContext(contextName) {
-            this.activeUIContext = this.uiContexts[contextName];
-            this.activeUIContext.setContextKey(contextName);
+            this.activeUI = this.uiContexts[contextName];
+            this.activeUI.setContextKey(contextName);
+        }
+    }, {
+        key: 'initializeAppState',
+        value: function initializeAppState(lang, businessData, uiData, chromeData) {
+            if (!this.activeUI) {
+                throw new Error("UI Context must be loaded before initializing app.");
+            }
+            var l10n = this.localizeSpawner.loadLocale(lang);
+            var route = this.activeUI.getMatchFromRoute(window.location.pathname);
+            var routes = this.activeUI.routeTable;
+            this.appState = { l10n: l10n, uiData: uiData, businessData: businessData, route: route, routes: routes };
+            this.chromeState = chromeData;
+        }
+    }, {
+        key: 'getState',
+        value: function getState() {
+            return this.appState;
         }
     }, {
         key: 'initializeUI',
-        value: function initializeUI(container, props, chromeProps) {
-            this.activeUIContext.initialize(container, props, chromeProps);
+        value: function initializeUI(container) {
+            this.activeUI.setStateGetter(this.getState.bind(this));
+            this.setupRouteListeners();
+            this.activeUI.initialize(container, this.appState, this.chromeState);
+        }
+    }, {
+        key: 'updateAppState',
+        value: function updateAppState(key, updateValue) {
+            var nextState = {
+                l10n: this.appState.l10n,
+                route: this.appState.route,
+                routes: this.appState.routes,
+                uiData: this.appState.uiData,
+                businessData: this.appState.businessData
+            };
+            if (key === "route") {
+                nextState.route = updateValue;
+            }
+            this.appState = nextState;
+            this.activeUI.update(nextState);
+        }
+    }, {
+        key: 'setupRouteListeners',
+        value: function setupRouteListeners() {
+            var _this = this;
+
+            document.addEventListener("click", function (e) {
+                var target = e.target;
+                while (target && target.tagName !== 'A') {
+                    target = target.parentNode;
+                }
+                if (target && target.getAttribute("href")) {
+                    var path = target.getAttribute("href");
+                    if (path.indexOf("http") === 0) {
+                        return;
+                    }
+                    e.preventDefault();
+                    var route = _this.activeUI.getMatchFromRoute(path);
+                    window.history.pushState(null, "", path);
+                    _this.updateAppState("route", route);
+                }
+            });
+            window.onpopstate = function (event) {
+                var path = window.location.pathname;
+                var route = _this.activeUI.getMatchFromRoute(path);
+                _this.updateAppState("route", route);
+            };
+            window.onpageshow = function (event) {
+                var path = window.location.pathname;
+                var route = _this.activeUI.getMatchFromRoute(path);
+                _this.updateAppState("route", route);
+            };
         }
     }]);
     return OffsideAppContainer;

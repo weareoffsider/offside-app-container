@@ -44,14 +44,26 @@ export default class RouteTable {
 
 
 export class RouteMatcher {
-  public routeMatcher: any;
-  public viewName: string;
-  public routeName: string;
+  public routeMatcher: any
+  public viewName: string
+  public routeName: string
+  public path: string
 
-  constructor (route: string, viewName: string, routeName?: string) {
-    this.routeMatcher = new Route(route)
-    this.viewName = viewName
-    this.routeName = routeName ? routeName : viewName
+  constructor (route?: string, viewName?: string, routeName?: string) {
+    if (route && viewName) {
+      this.routeMatcher = new Route(route)
+      this.viewName = viewName
+      this.routeName = routeName ? routeName : viewName
+    }
+  }
+
+  attachPath (path: string) {
+    const matcher = new RouteMatcher()
+    matcher.routeMatcher = this.routeMatcher
+    matcher.viewName = this.viewName
+    matcher.routeName = this.routeName
+    matcher.path = path
+    return matcher
   }
 
   match (path: string): boolean {

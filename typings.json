@@ -3,6 +3,8 @@
   "dependencies": {},
   "globalDependencies": {
     "i18next": "registry:dt/i18next#2.3.4+20160803175212",
-    "numeral": "github:retyped/numeraljs-tsd-ambient/numeraljs.d.ts"
+    "numeral": "github:retyped/numeraljs-tsd-ambient/numeraljs.d.ts",
+    "react": "registry:dt/react#0.14.0+20160829191040",
+    "react-dom": "registry:dt/react-dom#0.14.0+20160412154040"
   }
 }

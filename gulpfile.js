@@ -61,6 +61,13 @@ gulp.task("example:rollup", function () {
   .pipe(using())
 })
 
+gulp.task("example:json", function () {
+  return gulp.src("./example/**/*.json")
+    .pipe(gulp.dest("./build/example"))
+    .pipe(gulp.dest("./dist"))
+    .pipe(using())
+})
+
 gulp.task("example:html", function () {
   return gulp.src("./example/*.html")
     .pipe(gulp.dest("./build-web"))
@@ -90,6 +97,12 @@ gulp.task("example:webpack", function () {
           filename: "ExampleAppDependencies.pkg.js",
           libraryTarget: "var",
           library: "OffsideAppContainer",
+        },
+        module: {
+          loaders: [{
+            test: /\.json$/,
+            loader: "json-loader",
+          }]
         }
       }))
       .pipe(gulp.dest('build-web/'))
@@ -99,11 +112,15 @@ gulp.task("example:webpack", function () {
 })
 
 
-gulp.task("default", ["scripts", "definitions", "rollup"], function () {
+gulp.task("default", [
+  "scripts", "definitions", "rollup", "example:html", "example:json",
+  "example:scripts"
+], function () {
   gulp.watch("src/**/*.ts", ["scripts", "definitions"])
   gulp.watch("example/**/*.{ts,tsx}", ["example:scripts"])
   gulp.watch("example/**/*.html", ["example:html"])
-  gulp.watch("build/**/*.js", ["rollup", "example:rollup"])
+  gulp.watch("example/**/*.json", ["example:json"])
+  gulp.watch("build/**/*.{js,json}", ["rollup", "example:rollup"])
   gulp.watch("build/example/ExampleApp.node.js", ["example:webpack"])
   gulp.watch("dist/offside-app-container.node.js", ["example:webpack"])
 

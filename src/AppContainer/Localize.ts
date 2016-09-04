@@ -10,6 +10,10 @@ export default class LocalizeSpawner {
     const i18n = i18next.init({
       lng: langCode,
       resources: this.translationResources,
+      parseMissingKeyHandler: (key) => {
+        console.log("langCode missing: ", key)
+        return "{l10n absent: " + key + "}"
+      },
     });
 
     const localMoment = moment().locale(langCode);
@@ -24,6 +28,14 @@ export class LocalizeContext {
     private langCode: string,
     private i18n: I18next.I18n
   ) {
+    this.translate = this.translate.bind(this)
+    this.customDatetime = this.customDatetime.bind(this)
+    this.time = this.time.bind(this)
+    this.fullDatetime = this.fullDatetime.bind(this)
+    this.abbrDatetime = this.abbrDatetime.bind(this)
+    this.fullDate = this.fullDate.bind(this)
+    this.abbrDate = this.abbrDate.bind(this)
+    this.numericDate = this.numericDate.bind(this)
   }
 
   translate (key: string, params?: any) {

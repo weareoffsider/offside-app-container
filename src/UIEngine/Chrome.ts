@@ -1,19 +1,21 @@
-export interface ChromeOptions<UIData, UIChromeData, ChromeData> {
+import {AppState} from '../AppContainer/DataModel'
+
+export interface ChromeOptions<BusinessData, UIData, UIChromeData, ChromeRenderData> {
   /* Create the view inside the given container */
   initializeChrome(
-    container: Element, props: UIData,
+    container: Element, props: AppState<BusinessData, UIData>,
     chromeProps: UIChromeData
-  ): ChromeData;
+  ): ChromeRenderData;
 
   /* Send updates to the chrome on behalf of this view. */
   updateChrome(
-    container: Element, props: UIData,
-    chromeProps: UIChromeData, data?: ChromeData
-  ): ChromeData;
+    container: Element, props: AppState<BusinessData, UIData>,
+    chromeProps: UIChromeData, data?: ChromeRenderData
+  ): ChromeRenderData;
 }
 
-export default class ChromeDefinition<UIData, UIChromeData, ChromeData> {
-  constructor (private options: ChromeOptions<UIData, UIChromeData, ChromeData>) {
+export default class ChromeDefinition<BusinessData, UIData, UIChromeData, ChromeRenderData> {
+  constructor (private options: ChromeOptions<BusinessData, UIData, UIChromeData, ChromeRenderData>) {
   }
 
   getOptions () {
@@ -21,22 +23,22 @@ export default class ChromeDefinition<UIData, UIChromeData, ChromeData> {
   }
 }
 
-export class Chrome<UIData, UIChromeData, ChromeData> {
-  private chromeData: ChromeData
+export class Chrome<BusinessData, UIData, UIChromeData, ChromeRenderData> {
+  private chromeData: ChromeRenderData
 
   constructor (
     private container: Element,
-    private options: ChromeOptions<UIData, UIChromeData, ChromeData>
+    private options: ChromeOptions<BusinessData, UIData, UIChromeData, ChromeRenderData>
   ) {
   }
 
-  initialize (props: UIData, chromeProps: UIChromeData) {
+  initialize (props: AppState<BusinessData, UIData>, chromeProps: UIChromeData) {
     this.chromeData = this.options.initializeChrome(
       this.container, props, chromeProps
     )
   }
 
-  update (props: UIData, chromeProps: UIChromeData) {
+  update (props: AppState<BusinessData, UIData>, chromeProps: UIChromeData) {
     this.chromeData = this.options.updateChrome(
       this.container, props, chromeProps
     )

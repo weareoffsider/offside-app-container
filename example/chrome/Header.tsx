@@ -1,21 +1,14 @@
 import React from "react"
-import {UIData, UIChromeData} from "../ExampleAppData"
+import ReactDOM from "react-dom"
+import {ExampleAppState, UIChromeData} from "../ExampleAppData"
 
-interface ChromeData {
-}
+export default class Header extends React.Component<ExampleAppState, any> {
+  render () {
+    const {l10n} = this.props
+    const t_ = l10n.translate
 
-export function initializeChrome (
-  container: Element, props: UIData,
-  chromeProps: UIChromeData
-): ChromeData {
-  container.textContent = "Header"
-  return {}
-}
-
-export function updateChrome (
-  container: Element, props: UIData,
-  chromeProps: UIChromeData
-): ChromeData {
-  container.textContent = "Header"
-  return {}
+    return <header className="Header">
+      <h1>{t_("app_title")}</h1>
+    </header>
+  }
 }

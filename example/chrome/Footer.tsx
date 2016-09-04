@@ -1,21 +1,15 @@
 import React from "react"
-import {UIData, UIChromeData} from "../ExampleAppData"
+import ReactDOM from "react-dom"
+import {ExampleAppState, UIChromeData} from "../ExampleAppData"
 
-interface ChromeData {
-}
+export default class Footer extends React.Component<ExampleAppState, any> {
+  render () {
+    const {l10n} = this.props
+    const t_ = l10n.translate
 
-export function initializeChrome (
-  container: Element, props: UIData,
-  chromeProps: UIChromeData
-): ChromeData {
-  container.textContent = "Footer"
-  return {}
-}
-
-export function updateChrome (
-  container: Element, props: UIData,
-  chromeProps: UIChromeData
-): ChromeData {
-  container.textContent = "Footer"
-  return {}
+    return <footer className="Footer">
+      <p>{t_("footer")}</p>
+      <p>{t_("location")}: {this.props.route.viewName}</p>
+    </footer>
+  }
 }
