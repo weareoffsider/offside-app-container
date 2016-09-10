@@ -7,7 +7,7 @@ export default class Header extends React.Component<ExampleAppState, any> {
     const {l10n, uiData} = this.props
     const t_ = l10n.translate
 
-    return <header className="Header">
+    return <header className="Header" style={{marginBottom: "8rem"}}>
       <h1>{t_("app_title")} {uiData.title}</h1>
     </header>
   }

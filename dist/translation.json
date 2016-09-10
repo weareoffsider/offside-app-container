@@ -2,7 +2,9 @@
   "translation": {
     "app_title": "Example App Title",
     "location": "Current Location",
+    "swap_title": "Swap Title",
     "home": "Domicile",
+    "connection": "Connection",
     "about": "About",
     "footer": "Footer Text"
   }

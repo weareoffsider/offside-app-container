@@ -102,8 +102,13 @@ export default class UIContext<BusinessData, UIData, UIChromeData,
     state: AppState<BusinessData, UIData>,
     appActions: AppActions<BusinessData, UIData>
   ) {
+
     if (state.route.path !== this.activeView.route.path) {
       this.loadRoute(state.route, state, this.chromeState, appActions)
+
+      // loadRoute promises may mutate the state, so recollect
+      // state to ensure it's up to date
+      state = this.getLatestAppState()
     }
     this.chromeState = this.activeView.update(state, this.chromeState, appActions)
 

@@ -74,7 +74,7 @@ var Header = function (_React$Component) {
             var uiData = _props.uiData;
 
             var t_ = l10n.translate;
-            return React.createElement("header", { className: "Header" }, React.createElement("h1", null, t_("app_title"), " ", uiData.title));
+            return React.createElement("header", { className: "Header", style: { marginBottom: "8rem" } }, React.createElement("h1", null, t_("app_title"), " ", uiData.title));
         }
     }]);
     return Header;
@@ -94,7 +94,7 @@ var Footer = function (_React$Component) {
             var l10n = this.props.l10n;
 
             var t_ = l10n.translate;
-            return React.createElement("footer", { className: "Footer" }, React.createElement("p", null, t_("footer")), React.createElement("p", null, t_("location"), ": ", this.props.route.viewName));
+            return React.createElement("footer", { className: "Footer", style: { marginTop: "8rem" } }, React.createElement("p", null, t_("footer")), React.createElement("p", null, t_("location"), ": ", this.props.route.viewName), React.createElement("p", null, t_("connection"), ": ", this.props.comms['placeholder'].statusString));
         }
     }]);
     return Footer;
@@ -122,14 +122,9 @@ var Header$1 = function (_React$Component) {
         }
     }], [{
         key: "preLoad",
-        value: function preLoad(state) {
+        value: function preLoad(state, actions) {
             console.log("preloading");
-            return new Promise(function (resolve, reject) {
-                setTimeout(function () {
-                    console.log("resolving preload");
-                    resolve(true);
-                }, 2000);
-            });
+            return actions.comms['placeholder'].get("/posts/1");
         }
     }]);
     return Header;
@@ -278,6 +273,14 @@ app.setBusinessDispatch(setupBusinessStore(app));
 app.setBusinessActions(businessActions);
 app.setUiDispatch(setupUiStore(app));
 app.setUiActions(uiActions);
+var placeholderComms = new OffsideAppContainer.CommsChannel("placeholder", "http://jsonplaceholder.typicode.com", {}, function (req) {
+    return;
+}, function (req) {
+    return JSON.parse(req.responseText);
+}, function (req) {
+    return JSON.parse(req.responseText);
+});
+app.addCommsChannel(placeholderComms);
 var mainUI = new OffsideAppContainer.UIContext("");
 mainUI.addChrome("header", reactChrome(Header));
 mainUI.addChrome("footer", reactChrome(Footer));

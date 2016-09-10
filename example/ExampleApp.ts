@@ -1,6 +1,6 @@
 /// <reference path="../dist/offside-app-container.d.ts" />
 
-import OffsideAppContainer, {UIContext} from "offside-app-container"
+import OffsideAppContainer, {UIContext, CommsChannel} from "offside-app-container"
 import Header from "./chrome/Header"
 import Footer from "./chrome/Footer"
 import HomePage from "./views/HomePage"
@@ -20,6 +20,23 @@ app.setBusinessActions(businessActions)
 
 app.setUiDispatch(setupUiStore(app))
 app.setUiActions(uiActions)
+
+const placeholderComms = new CommsChannel<any>(
+  "placeholder",
+  "http://jsonplaceholder.typicode.com",
+  {},
+  function (req: XMLHttpRequest) {
+    return
+  },
+  function (req: XMLHttpRequest) {
+    return JSON.parse(req.responseText)
+  },
+  function (req: XMLHttpRequest) {
+    return JSON.parse(req.responseText)
+  }
+)
+
+app.addCommsChannel(placeholderComms)
 
 const mainUI = new UIContext<BusinessData, UIData, UIChromeData, any, any>("")
 mainUI.addChrome("header", reactChrome(Header))

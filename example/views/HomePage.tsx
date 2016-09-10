@@ -1,16 +1,14 @@
 import React from "react"
 import ReactDOM from "react-dom"
-import {ExampleAppProps, ExampleAppState, UIChromeData} from "../ExampleAppData"
+import {
+  ExampleAppProps, ExampleAppState, UIChromeData,
+  ExampleAppActions
+} from "../ExampleAppData"
 
 export default class Header extends React.Component<ExampleAppProps, any> {
-  static preLoad (state: ExampleAppState) {
+  static preLoad (state: ExampleAppState, actions: ExampleAppActions) {
     console.log("preloading")
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        console.log("resolving preload")
-        resolve(true)
-      }, 2000)
-    })
+    return actions.comms['placeholder'].get("/posts/1")
   }
 
   render () {

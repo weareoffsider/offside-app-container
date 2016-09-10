@@ -1,9 +1,11 @@
 import Localize, {LocalizeContext} from './Localize';
+import {CommsActions, CommsChannelState} from "../Comms/CommsChannel"
 import RouteTable, {RouteMatcher} from '../UIEngine/RouteTable'
 
 export interface AppState<BusinessData, UIData> {
   l10n: LocalizeContext
   route?: RouteMatcher
+  comms: {[key: string]: CommsChannelState}
   routes: RouteTable
   uiData: UIData
   businessData: BusinessData
@@ -14,7 +16,7 @@ export interface AppActions<BusinessData, UIData> {
   ui?: any
   forms?: any
   routes?: any
-  comms?: any
+  comms: {[key: string]: CommsActions}
 }
 
 

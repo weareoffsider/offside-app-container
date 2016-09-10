@@ -15,6 +15,7 @@ export interface UIAction {
 }
 
 export type ExampleAppActor = AppActor<BusinessData, UIData, BusinessAction, UIAction>
+export type ExampleAppActions = AppActions<BusinessData, UIData>
 export type ExampleAppState = AppState<BusinessData, UIData>
 
 export interface ExampleAppProps extends ExampleAppState {

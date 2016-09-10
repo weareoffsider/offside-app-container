@@ -1,6 +1,7 @@
-import Localize, {LocalizeContext} from './AppContainer/Localize';
+import Localize, {LocalizeContext} from './AppContainer/Localize'
+import CommsChannel, {CommsChannelState} from './Comms/CommsChannel'
 import {AppState, AppActions, AppActor} from './AppContainer/DataModel'
-import UIContext from './UIEngine/UIContext';
+import UIContext from './UIEngine/UIContext'
 
 
 export default class OffsideAppContainer<
@@ -10,6 +11,7 @@ export default class OffsideAppContainer<
   public localizeSpawner: Localize
   public activeUI: UIContext<BusinessData, UIData, UIChromeData, any, any>
   public uiContexts: {[key: string]: UIContext<BusinessData, UIData, UIChromeData, any, any>}
+  public commsChannels: {[key: string]: CommsChannel<any>}
   public appState: AppState<BusinessData, UIData>
   public chromeState: UIChromeData
   public appActions: AppActions<BusinessData, UIData>
@@ -17,12 +19,14 @@ export default class OffsideAppContainer<
 
   constructor () {
     this.uiContexts = {}
+    this.commsChannels = {}
 
     this.appActor = new AppActor<BusinessData, UIData, BusinessAction, UIAction>()
     this.appActor.setStateGetter = this.getState.bind(this)
     this.appActions = {
       ui: {},
       business: {},
+      comms: {},
     }
   }
 
@@ -46,6 +50,12 @@ export default class OffsideAppContainer<
     }
 
     this.appActions.business = binder(actionObject)
+  }
+
+  addCommsChannel(commsChannel: CommsChannel<any>) {
+    this.commsChannels[commsChannel.name] = commsChannel
+    this.appActions.comms[commsChannel.name] = commsChannel.actions()
+    commsChannel.setStateSetter(this.updateCommsState.bind(this))
   }
 
   setUiDispatch(func: (a: UIAction) => void) {
@@ -98,8 +108,14 @@ export default class OffsideAppContainer<
     }
     const l10n = this.localizeSpawner.loadLocale(lang)
     const route = this.activeUI.getMatchFromRoute(window.location.pathname)
+    const comms: {[key: string]: CommsChannelState} = {}
+
+    Object.keys(this.commsChannels).forEach((name) => {
+      comms[name] = this.commsChannels[name].getState()
+    })
+
     const routes = this.activeUI.routeTable
-    this.appState = {l10n, uiData, businessData, route, routes}
+    this.appState = {l10n, uiData, businessData, route, routes, comms}
     this.chromeState = chromeData
   }
 
@@ -115,11 +131,24 @@ export default class OffsideAppContainer<
     )
   }
 
+  updateCommsState (key: string, state: CommsChannelState) {
+    const nextComms: {[key: string]: CommsChannelState} = {}
+
+    Object.keys(this.appState.comms).forEach((name) => {
+      nextComms[name] = this.appState.comms[name]
+    })
+
+    nextComms[key] = state
+
+    this.updateAppState("comms", nextComms)
+  }
+
   updateAppState (key: string, updateValue: any) {
     const nextState: AppState<BusinessData, UIData> = {
       l10n: this.appState.l10n,
       route: this.appState.route,
       routes: this.appState.routes,
+      comms: this.appState.comms,
       uiData: this.appState.uiData,
       businessData: this.appState.businessData,
     }
@@ -130,12 +159,12 @@ export default class OffsideAppContainer<
     }
 
     if (key === "route") { nextState.route = updateValue }
+    if (key === "comms") { nextState.comms = updateValue }
     if (key === "uiData") { nextState.uiData = updateValue }
-    if (key === "businessData") {
-      nextState.businessData = updateValue
-    }
+    if (key === "businessData") { nextState.businessData = updateValue }
 
     this.appState = nextState
+    console.log("App Update", nextState)
     this.activeUI.update(nextState, this.appActions)
   }
 
@@ -172,6 +201,7 @@ export default class OffsideAppContainer<
 
 export {
   UIContext,
+  CommsChannel,
   Localize,
   AppState,
   AppActions,

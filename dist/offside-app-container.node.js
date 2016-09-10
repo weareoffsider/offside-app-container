@@ -128,6 +128,120 @@ var LocalizeContext = function () {
     return LocalizeContext;
 }();
 
+var CommsChannelStatus;
+(function (CommsChannelStatus) {
+    CommsChannelStatus[CommsChannelStatus["Offline"] = 0] = "Offline";
+    CommsChannelStatus[CommsChannelStatus["Idle"] = 1] = "Idle";
+    CommsChannelStatus[CommsChannelStatus["Active"] = 2] = "Active";
+})(CommsChannelStatus || (CommsChannelStatus = {}));
+
+var CommsChannel = function () {
+    function CommsChannel(name, urlRoot, commData, prepareRequest, processSuccess, processError) {
+        classCallCheck(this, CommsChannel);
+
+        this.name = name;
+        this.urlRoot = urlRoot;
+        this.commData = commData;
+        this.prepareRequest = prepareRequest;
+        this.processSuccess = processSuccess;
+        this.processError = processError;
+        this.nextRequestKey = 0;
+        this.state = {
+            requests: [],
+            status: CommsChannelStatus.Idle,
+            statusString: CommsChannelStatus[CommsChannelStatus.Idle]
+        };
+    }
+
+    createClass(CommsChannel, [{
+        key: "setStateSetter",
+        value: function setStateSetter(func) {
+            this.updateCommsState = func;
+        }
+    }, {
+        key: "getState",
+        value: function getState() {
+            return this.state;
+        }
+    }, {
+        key: "updateRequestState",
+        value: function updateRequestState(key, request) {
+            var nextRequests = this.state.requests.slice();
+            var status = void 0;
+            nextRequests[key] = request;
+            if (this.state.status === CommsChannelStatus.Offline) {
+                if (request.status !== 0 && request.progress === 1) {
+                    if (nextRequests.every(function (r) {
+                        return r.progress === 1;
+                    })) {
+                        status = CommsChannelStatus.Idle;
+                    } else {
+                        status = CommsChannelStatus.Active;
+                    }
+                } else {
+                    status = CommsChannelStatus.Offline;
+                }
+            } else {
+                if (request.status === 0) {
+                    status = CommsChannelStatus.Offline;
+                } else if (nextRequests.every(function (r) {
+                    return r.progress === 1;
+                })) {
+                    status = CommsChannelStatus.Idle;
+                } else {
+                    status = CommsChannelStatus.Active;
+                }
+            }
+            this.state = {
+                requests: nextRequests, status: status,
+                statusString: CommsChannelStatus[status]
+            };
+            this.updateCommsState(this.name, this.state);
+        }
+    }, {
+        key: "get",
+        value: function get(url) {
+            var _this = this;
+
+            var key = this.nextRequestKey++;
+            return new Promise(function (resolve, reject) {
+                console.log("comms :: " + _this.name + " :: get - " + url);
+                var req = new XMLHttpRequest();
+                _this.updateRequestState(key, { url: url, progress: 0 });
+                req.addEventListener("load", function () {
+                    if (req.status >= 400) {
+                        var result = _this.processError(req, _this.commData);
+                        _this.updateRequestState(key, { url: url, status: req.status,
+                            progress: 1, result: result });
+                        reject(result);
+                    } else {
+                        var _result = _this.processSuccess(req, _this.commData);
+                        _this.updateRequestState(key, { url: url, status: req.status,
+                            progress: 1, result: _result });
+                        resolve(_result);
+                    }
+                }, false);
+                req.addEventListener("error", function () {
+                    var result = _this.processError(req, _this.commData);
+                    _this.updateRequestState(key, { url: url, status: 0, progress: 1, result: result });
+                    reject(result);
+                }, false);
+                req.open("GET", "" + _this.urlRoot + url);
+                _this.prepareRequest(req, _this.commData);
+                req.send();
+            });
+        }
+    }, {
+        key: "actions",
+        value: function actions() {
+            return {
+                get: this.get.bind(this)
+            };
+        }
+    }]);
+    return CommsChannel;
+}();
+
 var AppActor = function () {
     function AppActor() {
         classCallCheck(this, AppActor);
@@ -429,6 +543,9 @@ var UIContext = function () {
 
             if (state.route.path !== this.activeView.route.path) {
                 this.loadRoute(state.route, state, this.chromeState, appActions);
+                // loadRoute promises may mutate the state, so recollect
+                // state to ensure it's up to date
+                state = this.getLatestAppState();
             }
             this.chromeState = this.activeView.update(state, this.chromeState, appActions);
             Object.keys(this.activeChrome).forEach(function (name) {
@@ -501,11 +618,13 @@ var OffsideAppContainer = function () {
         classCallCheck(this, OffsideAppContainer);
 
         this.uiContexts = {};
+        this.commsChannels = {};
         this.appActor = new AppActor();
         this.appActor.setStateGetter = this.getState.bind(this);
         this.appActions = {
             ui: {},
-            business: {}
+            business: {},
+            comms: {}
         };
     }
 
@@ -539,6 +658,13 @@ var OffsideAppContainer = function () {
                 }
             };
             this.appActions.business = binder(actionObject);
+        }
+    }, {
+        key: 'addCommsChannel',
+        value: function addCommsChannel(commsChannel) {
+            this.commsChannels[commsChannel.name] = commsChannel;
+            this.appActions.comms[commsChannel.name] = commsChannel.actions();
+            commsChannel.setStateSetter(this.updateCommsState.bind(this));
         }
     }, {
         key: 'setUiDispatch',
@@ -590,13 +716,19 @@ var OffsideAppContainer = function () {
     }, {
         key: 'initializeAppState',
         value: function initializeAppState(lang, businessData, uiData, chromeData) {
+            var _this3 = this;
+
             if (!this.activeUI) {
                 throw new Error("UI Context must be loaded before initializing app.");
             }
             var l10n = this.localizeSpawner.loadLocale(lang);
             var route = this.activeUI.getMatchFromRoute(window.location.pathname);
+            var comms = {};
+            Object.keys(this.commsChannels).forEach(function (name) {
+                comms[name] = _this3.commsChannels[name].getState();
+            });
             var routes = this.activeUI.routeTable;
-            this.appState = { l10n: l10n, uiData: uiData, businessData: businessData, route: route, routes: routes };
+            this.appState = { l10n: l10n, uiData: uiData, businessData: businessData, route: route, routes: routes, comms: comms };
             this.chromeState = chromeData;
         }
     }, {
@@ -612,12 +744,25 @@ var OffsideAppContainer = function () {
             this.activeUI.initialize(container, this.appState, this.chromeState, this.appActions);
         }
     }, {
+        key: 'updateCommsState',
+        value: function updateCommsState(key, state) {
+            var _this4 = this;
+
+            var nextComms = {};
+            Object.keys(this.appState.comms).forEach(function (name) {
+                nextComms[name] = _this4.appState.comms[name];
+            });
+            nextComms[key] = state;
+            this.updateAppState("comms", nextComms);
+        }
+    }, {
         key: 'updateAppState',
         value: function updateAppState(key, updateValue) {
             var nextState = {
                 l10n: this.appState.l10n,
                 route: this.appState.route,
                 routes: this.appState.routes,
+                comms: this.appState.comms,
                 uiData: this.appState.uiData,
                 businessData: this.appState.businessData
             };
@@ -628,6 +773,9 @@ var OffsideAppContainer = function () {
             if (key === "route") {
                 nextState.route = updateValue;
             }
+            if (key === "comms") {
+                nextState.comms = updateValue;
+            }
             if (key === "uiData") {
                 nextState.uiData = updateValue;
             }
@@ -635,12 +783,13 @@ var OffsideAppContainer = function () {
                 nextState.businessData = updateValue;
             }
             this.appState = nextState;
+            console.log("App Update", nextState);
             this.activeUI.update(nextState, this.appActions);
         }
     }, {
         key: 'setupRouteListeners',
         value: function setupRouteListeners() {
-            var _this3 = this;
+            var _this5 = this;
 
             document.addEventListener("click", function (e) {
                 var target = e.target;
@@ -653,20 +802,20 @@ var OffsideAppContainer = function () {
                         return;
                     }
                     e.preventDefault();
-                    var route = _this3.activeUI.getMatchFromRoute(path);
+                    var route = _this5.activeUI.getMatchFromRoute(path);
                     window.history.pushState(null, "", path);
-                    _this3.updateAppState("route", route);
+                    _this5.updateAppState("route", route);
                 }
             });
             window.onpopstate = function (event) {
                 var path = window.location.pathname;
-                var route = _this3.activeUI.getMatchFromRoute(path);
-                _this3.updateAppState("route", route);
+                var route = _this5.activeUI.getMatchFromRoute(path);
+                _this5.updateAppState("route", route);
             };
             window.onpageshow = function (event) {
                 var path = window.location.pathname;
-                var route = _this3.activeUI.getMatchFromRoute(path);
-                _this3.updateAppState("route", route);
+                var route = _this5.activeUI.getMatchFromRoute(path);
+                _this5.updateAppState("route", route);
             };
         }
     }]);
@@ -675,5 +824,6 @@ var OffsideAppContainer = function () {
 
 exports['default'] = OffsideAppContainer;
 exports.UIContext = UIContext;
+exports.CommsChannel = CommsChannel;
 exports.Localize = LocalizeSpawner;
 exports.AppActor = AppActor;

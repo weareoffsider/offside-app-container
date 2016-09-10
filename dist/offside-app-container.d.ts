@@ -19,6 +19,44 @@ declare module "AppContainer/Localize" {
         numericDate(datetime: any): string;
     }
 }
+declare module "Comms/CommsChannel" {
+    export interface CommsActions {
+        get: (url: string) => Promise<any>;
+    }
+    export enum CommsChannelStatus {
+        Offline = 0,
+        Idle = 1,
+        Active = 2,
+    }
+    export interface CommsChannelRequest {
+        url: string;
+        progress: number;
+        status?: number;
+        result?: any;
+    }
+    export interface CommsChannelState {
+        requests: Array<CommsChannelRequest>;
+        status: CommsChannelStatus;
+        statusString: string;
+    }
+    export default class CommsChannel<CommData> {
+        name: string;
+        urlRoot: string;
+        commData: CommData;
+        private prepareRequest;
+        private processSuccess;
+        private processError;
+        private nextRequestKey;
+        private state;
+        private updateCommsState;
+        constructor(name: string, urlRoot: string, commData: CommData, prepareRequest: (req: XMLHttpRequest, commData?: CommData) => void, processSuccess: (req: XMLHttpRequest, commData?: CommData) => any, processError: (req: XMLHttpRequest, commData?: CommData) => any);
+        setStateSetter(func: (name: string, state: CommsChannelState) => void): void;
+        getState(): CommsChannelState;
+        updateRequestState(key: number, request: CommsChannelRequest): void;
+        get(url: string): Promise<any>;
+        actions(): CommsActions;
+    }
+}
 declare module "UIEngine/RouteTable" {
     export default class RouteTable {
         routeBase: string;
@@ -41,10 +79,14 @@ declare module "UIEngine/RouteTable" {
 }
 declare module "AppContainer/DataModel" {
     import { LocalizeContext } from "AppContainer/Localize";
+    import { CommsActions, CommsChannelState } from "Comms/CommsChannel";
     import RouteTable, { RouteMatcher } from "UIEngine/RouteTable";
     export interface AppState<BusinessData, UIData> {
         l10n: LocalizeContext;
         route?: RouteMatcher;
+        comms: {
+            [key: string]: CommsChannelState;
+        };
         routes: RouteTable;
         uiData: UIData;
         businessData: BusinessData;
@@ -54,7 +96,9 @@ declare module "AppContainer/DataModel" {
         ui?: any;
         forms?: any;
         routes?: any;
-        comms?: any;
+        comms: {
+            [key: string]: CommsActions;
+        };
     }
     export class AppActor<BusinessData, UIData, BusinessAction, UIAction> {
         getAppState: () => AppState<BusinessData, UIData>;
@@ -155,6 +199,7 @@ declare module "UIEngine/UIContext" {
 }
 declare module "offside-app-container" {
     import Localize from "AppContainer/Localize";
+    import CommsChannel, { CommsChannelState } from "Comms/CommsChannel";
     import { AppState, AppActions, AppActor } from "AppContainer/DataModel";
     import UIContext from "UIEngine/UIContext";
     export default class OffsideAppContainer<BusinessData, UIData, UIChromeData, BusinessAction, UIAction> {
@@ -163,6 +208,9 @@ declare module "offside-app-container" {
         uiContexts: {
             [key: string]: UIContext<BusinessData, UIData, UIChromeData, any, any>;
         };
+        commsChannels: {
+            [key: string]: CommsChannel<any>;
+        };
         appState: AppState<BusinessData, UIData>;
         chromeState: UIChromeData;
         appActions: AppActions<BusinessData, UIData>;
@@ -170,6 +218,7 @@ declare module "offside-app-container" {
         constructor();
         setBusinessDispatch(func: (a: BusinessAction) => void): void;
         setBusinessActions(actionObject: any): void;
+        addCommsChannel(commsChannel: CommsChannel<any>): void;
         setUiDispatch(func: (a: UIAction) => void): void;
         setUiActions(actionObject: any): void;
         setupLocalisation(translationResources: any): void;
@@ -178,8 +227,9 @@ declare module "offside-app-container" {
         initializeAppState(lang: string, businessData: BusinessData, uiData: UIData, chromeData: UIChromeData): void;
         getState(): AppState<BusinessData, UIData>;
         initializeUI(container: Element): void;
+        updateCommsState(key: string, state: CommsChannelState): void;
         updateAppState(key: string, updateValue: any): void;
         setupRouteListeners(): void;
     }
-    export { UIContext, Localize, AppState, AppActions, AppActor };
+    export { UIContext, CommsChannel, Localize, AppState, AppActions, AppActor };
 }
