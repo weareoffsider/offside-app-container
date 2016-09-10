@@ -9,9 +9,17 @@ import reactChrome from "./reactChrome"
 import reactView from "./reactView"
 const enLang = require("json!./translation.json")
 import {BusinessData, UIData, UIChromeData} from "./ExampleAppData"
+import setupBusinessStore, {businessActions} from "./BusinessStore"
+import setupUiStore, {uiActions} from "./UIStore"
 
-const app = new OffsideAppContainer<BusinessData, UIData, UIChromeData>()
+const app = new OffsideAppContainer<BusinessData, UIData, UIChromeData, any, any>()
 const container = document.getElementById("app-container")
+
+app.setBusinessDispatch(setupBusinessStore(app))
+app.setBusinessActions(businessActions)
+
+app.setUiDispatch(setupUiStore(app))
+app.setUiActions(uiActions)
 
 const mainUI = new UIContext<BusinessData, UIData, UIChromeData, any, any>("")
 mainUI.addChrome("header", reactChrome(Header))
@@ -37,7 +45,7 @@ app.loadUIContext("main")
 
 app.initializeAppState(
   "en",
-  {},
+  0,
   {
     title: "Start Title",
   }, {

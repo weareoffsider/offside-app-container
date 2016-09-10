@@ -8,6 +8,7 @@ var OffsideAppContainer = require('offside-app-container');
 var OffsideAppContainer__default = _interopDefault(OffsideAppContainer);
 var React = _interopDefault(require('react'));
 var ReactDOM = _interopDefault(require('react-dom'));
+var redux = require('redux');
 
 var classCallCheck = function (instance, Constructor) {
   if (!(instance instanceof Constructor)) {
@@ -68,10 +69,12 @@ var Header = function (_React$Component) {
     createClass(Header, [{
         key: "render",
         value: function render() {
-            var l10n = this.props.l10n;
+            var _props = this.props;
+            var l10n = _props.l10n;
+            var uiData = _props.uiData;
 
             var t_ = l10n.translate;
-            return React.createElement("header", { className: "Header" }, React.createElement("h1", null, t_("app_title")));
+            return React.createElement("header", { className: "Header" }, React.createElement("h1", null, t_("app_title"), " ", uiData.title));
         }
     }]);
     return Header;
@@ -111,9 +114,11 @@ var Header$1 = function (_React$Component) {
             var _props = this.props;
             var l10n = _props.l10n;
             var routes = _props.routes;
+            var businessData = _props.businessData;
+            var actions = _props.actions;
 
             var t_ = l10n.translate;
-            return React.createElement("section", { className: "HomePage" }, React.createElement("h1", null, "App Body in Heyah"), React.createElement("a", { href: routes.getPath('about') }, t_('about')));
+            return React.createElement("section", { className: "HomePage" }, React.createElement("h1", null, "App Body in Heyah"), React.createElement("button", { onClick: actions.ui.swapTitle }, t_('swap_title')), React.createElement("h3", null, "Counter"), React.createElement("button", { onClick: actions.business.decrement }, "-"), React.createElement("span", null, businessData), React.createElement("button", { onClick: actions.business.increment }, "+"), React.createElement("br", null), React.createElement("br", null), React.createElement("a", { href: routes.getPath('about') }, t_('about')));
         }
     }], [{
         key: "preLoad",
@@ -169,11 +174,11 @@ var __assign = undefined && undefined.__assign || Object.assign || function (t) 
 };
 function reactChrome(ChromeComponent) {
     return {
-        initializeChrome: function initializeChrome(container, state, chromeState) {
+        initializeChrome: function initializeChrome(container, state, chromeState, appActions) {
             ReactDOM.render(React.createElement(ChromeComponent, __assign({}, state, chromeState)), container);
             return {};
         },
-        updateChrome: function updateChrome(container, state, chromeState) {
+        updateChrome: function updateChrome(container, state, chromeState, appActions) {
             ReactDOM.render(React.createElement(ChromeComponent, __assign({}, state, chromeState)), container);
             return {};
         }
@@ -193,26 +198,86 @@ function reactView(ViewComponent) {
     return {
         preLoad: ViewComponent.preLoad,
         postLoad: ViewComponent.postLoad,
-        createView: function createView(container, state) {
-            ReactDOM.render(React.createElement(ViewComponent, __assign$1({}, state)), container);
+        createView: function createView(container, state, actions) {
+            ReactDOM.render(React.createElement(ViewComponent, __assign$1({}, state, { actions: actions })), container);
             return {};
         },
 
         updateChrome: ViewComponent.updateChrome,
-        updateView: function updateView(container, state, data) {
-            ReactDOM.render(React.createElement(ViewComponent, __assign$1({}, state)), container);
+        updateView: function updateView(container, state, actions, data) {
+            ReactDOM.render(React.createElement(ViewComponent, __assign$1({}, state, { actions: actions })), container);
             return {};
         },
-        destroyView: function destroyView(container, state, data) {
+        destroyView: function destroyView(container, data) {
             ReactDOM.unmountComponentAtNode(container);
         }
     };
 }
 
+function counter() {
+    var state = arguments.length <= 0 || arguments[0] === undefined ? 0 : arguments[0];
+    var action = arguments[1];
+
+    switch (action.type) {
+        case 'INCREMENT':
+            return state + 1;
+        case 'DECREMENT':
+            return state - 1;
+        default:
+            return state;
+    }
+}
+function setupBusinessStore(app) {
+    var store = redux.createStore(counter, window.devToolsExtension && window.devToolsExtension());
+    store.subscribe(function () {
+        app.updateAppState("businessData", store.getState());
+    });
+    return store.dispatch.bind(store);
+}
+var businessActions = {
+    increment: function increment() {
+        this.businessDispatch({ type: 'INCREMENT' });
+    },
+    decrement: function decrement() {
+        this.businessDispatch({ type: 'DECREMENT' });
+    }
+};
+
+var defaultState = {
+    title: "Start Title"
+};
+function swapper() {
+    var state = arguments.length <= 0 || arguments[0] === undefined ? defaultState : arguments[0];
+    var action = arguments[1];
+
+    switch (action.type) {
+        case 'SWAP_TITLE':
+            return state.title === "Start Title" ? { title: "Other Title" } : { title: "Start Title" };
+        default:
+            return state;
+    }
+}
+function setupUiStore(app) {
+    var store = redux.createStore(swapper, window.devToolsExtension && window.devToolsExtension());
+    store.subscribe(function () {
+        app.updateAppState("uiData", store.getState());
+    });
+    return store.dispatch.bind(store);
+}
+var uiActions = {
+    swapTitle: function swapTitle() {
+        this.uiDispatch({ type: 'SWAP_TITLE' });
+    }
+};
+
 /// <reference path="../dist/offside-app-container.d.ts" />
 var enLang = require("json!./translation.json");
 var app = new OffsideAppContainer__default();
 var container = document.getElementById("app-container");
+app.setBusinessDispatch(setupBusinessStore(app));
+app.setBusinessActions(businessActions);
+app.setUiDispatch(setupUiStore(app));
+app.setUiActions(uiActions);
 var mainUI = new OffsideAppContainer.UIContext("");
 mainUI.addChrome("header", reactChrome(Header));
 mainUI.addChrome("footer", reactChrome(Footer));
@@ -226,7 +291,7 @@ app.setupLocalisation({
     en: enLang
 });
 app.loadUIContext("main");
-app.initializeAppState("en", {}, {
+app.initializeAppState("en", 0, {
     title: "Start Title"
 }, {
     showHeader: true,

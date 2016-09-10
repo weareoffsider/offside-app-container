@@ -6,7 +6,8 @@ export default function reactChrome<AppState, UIChromeData> (
 ) {
   return {
     initializeChrome (
-      container: Element, state: AppState, chromeState: UIChromeData
+      container: Element, state: AppState, chromeState: UIChromeData,
+      appActions: any
     ) {
       ReactDOM.render(
         <ChromeComponent {...state} {...chromeState} />,
@@ -16,7 +17,8 @@ export default function reactChrome<AppState, UIChromeData> (
     },
 
     updateChrome (
-      container: Element, state: AppState, chromeState: UIChromeData
+      container: Element, state: AppState, chromeState: UIChromeData,
+      appActions: any
     ) {
       ReactDOM.render(
         <ChromeComponent {...state} {...chromeState} />,

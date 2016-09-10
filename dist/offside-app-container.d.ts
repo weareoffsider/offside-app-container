@@ -49,41 +49,60 @@ declare module "AppContainer/DataModel" {
         uiData: UIData;
         businessData: BusinessData;
     }
+    export interface AppActions<BusinessData, UIData> {
+        business?: any;
+        ui?: any;
+        forms?: any;
+        routes?: any;
+        comms?: any;
+    }
+    export class AppActor<BusinessData, UIData, BusinessAction, UIAction> {
+        getAppState: () => AppState<BusinessData, UIData>;
+        businessDispatch: (a: BusinessAction) => void;
+        uiDispatch: (a: UIAction) => void;
+        setStateGetter(func: () => AppState<BusinessData, UIData>): void;
+        setBusinessDispatch(func: (a: BusinessAction) => void): void;
+        setUiDispatch(func: (a: UIAction) => void): void;
+    }
+    export interface BusinessDataInterface<BusinessData, BusinessAction> {
+        dispatch: (action: BusinessAction) => void;
+    }
 }
 declare module "UIEngine/View" {
-    import { AppState } from "AppContainer/DataModel";
+    import { AppState, AppActions } from "AppContainer/DataModel";
+    import { RouteMatcher } from "UIEngine/RouteTable";
     export interface ViewOptions<BusinessData, UIData, UIChromeData, ViewRenderData> {
-        preLoad?(props: AppState<BusinessData, UIData>): Promise<any>;
-        postLoad?(props: AppState<BusinessData, UIData>): Promise<any>;
-        createView(container: Element, props: AppState<BusinessData, UIData>): ViewRenderData;
-        updateChrome?(props: AppState<BusinessData, UIData>, chromeData: UIChromeData, data?: ViewRenderData): UIChromeData;
-        updateView(container: Element, props: AppState<BusinessData, UIData>, data: ViewRenderData): ViewRenderData;
-        destroyView(container: Element, props: AppState<BusinessData, UIData>, data: ViewRenderData): void;
+        preLoad?(state: AppState<BusinessData, UIData>, actions: AppActions<BusinessData, UIData>): Promise<any>;
+        postLoad?(state: AppState<BusinessData, UIData>, actions: AppActions<BusinessData, UIData>): Promise<any>;
+        createView(container: Element, state: AppState<BusinessData, UIData>, actions: AppActions<BusinessData, UIData>): ViewRenderData;
+        updateChrome?(state: AppState<BusinessData, UIData>, chromeData: UIChromeData, data?: ViewRenderData): UIChromeData;
+        updateView(container: Element, state: AppState<BusinessData, UIData>, actions: AppActions<BusinessData, UIData>, data: ViewRenderData): ViewRenderData;
+        destroyView(container: Element, data?: ViewRenderData): void;
     }
     export default class ViewDefinition<BusinessData, UIData, UIChromeData, ViewRenderData> {
         private options;
         constructor(options: ViewOptions<BusinessData, UIData, UIChromeData, ViewRenderData>);
-        spawnView(container: Element, path: string): View<BusinessData, UIData, UIChromeData, ViewRenderData>;
+        spawnView(container: Element, route: RouteMatcher): View<BusinessData, UIData, UIChromeData, ViewRenderData>;
     }
     export class View<BusinessData, UIData, UIChromeData, ViewRenderData> {
         container: Element;
-        viewPath: string;
+        route: RouteMatcher;
         private options;
         private viewData;
         private loaded;
-        constructor(container: Element, viewPath: string, options: ViewOptions<BusinessData, UIData, UIChromeData, ViewRenderData>);
-        preLoadData(props: AppState<BusinessData, UIData>): Promise<any>;
-        postLoadData(props: AppState<BusinessData, UIData>): Promise<any>;
-        create(props: AppState<BusinessData, UIData>, chromeData: UIChromeData): UIChromeData;
-        update(props: AppState<BusinessData, UIData>, chromeData: UIChromeData): UIChromeData;
-        destroy(props: AppState<BusinessData, UIData>): void;
+        constructor(container: Element, route: RouteMatcher, options: ViewOptions<BusinessData, UIData, UIChromeData, ViewRenderData>);
+        preLoadData(state: AppState<BusinessData, UIData>, actions: AppActions<BusinessData, UIData>): Promise<any>;
+        postLoadData(state: AppState<BusinessData, UIData>, actions: AppActions<BusinessData, UIData>): Promise<any>;
+        create(state: AppState<BusinessData, UIData>, chromeData: UIChromeData, actions: AppActions<BusinessData, UIData>): UIChromeData;
+        update(state: AppState<BusinessData, UIData>, chromeData: UIChromeData, actions: AppActions<BusinessData, UIData>): UIChromeData;
+        destroy(): void;
     }
 }
 declare module "UIEngine/Chrome" {
-    import { AppState } from "AppContainer/DataModel";
+    import { AppState, AppActions } from "AppContainer/DataModel";
     export interface ChromeOptions<BusinessData, UIData, UIChromeData, ChromeRenderData> {
-        initializeChrome(container: Element, props: AppState<BusinessData, UIData>, chromeProps: UIChromeData): ChromeRenderData;
-        updateChrome(container: Element, props: AppState<BusinessData, UIData>, chromeProps: UIChromeData, data?: ChromeRenderData): ChromeRenderData;
+        initializeChrome(container: Element, state: AppState<BusinessData, UIData>, chromeProps: UIChromeData, actions: AppActions<BusinessData, UIData>): ChromeRenderData;
+        updateChrome(container: Element, state: AppState<BusinessData, UIData>, chromeProps: UIChromeData, actions: AppActions<BusinessData, UIData>, data?: ChromeRenderData): ChromeRenderData;
     }
     export default class ChromeDefinition<BusinessData, UIData, UIChromeData, ChromeRenderData> {
         private options;
@@ -95,15 +114,15 @@ declare module "UIEngine/Chrome" {
         private options;
         private chromeData;
         constructor(container: Element, options: ChromeOptions<BusinessData, UIData, UIChromeData, ChromeRenderData>);
-        initialize(props: AppState<BusinessData, UIData>, chromeProps: UIChromeData): void;
-        update(props: AppState<BusinessData, UIData>, chromeProps: UIChromeData): void;
+        initialize(state: AppState<BusinessData, UIData>, chromeProps: UIChromeData, actions: AppActions<BusinessData, UIData>): void;
+        update(state: AppState<BusinessData, UIData>, chromeProps: UIChromeData, actions: AppActions<BusinessData, UIData>): void;
     }
 }
 declare module "UIEngine/UIContext" {
     import { ViewOptions, View } from "UIEngine/View";
     import { ChromeOptions } from "UIEngine/Chrome";
     import RouteTable, { RouteMatcher } from "UIEngine/RouteTable";
-    import { AppState } from "AppContainer/DataModel";
+    import { AppState, AppActions } from "AppContainer/DataModel";
     export default class UIContext<BusinessData, UIData, UIChromeData, ViewRenderData, ChromeRenderData> {
         private contextKey;
         private viewSet;
@@ -115,7 +134,9 @@ declare module "UIEngine/UIContext" {
         private activeView;
         private exitingView;
         private renderOrder;
+        private transitionHandler;
         private getLatestAppState;
+        private getLatestAppActions;
         private chromeState;
         constructor(urlBase: string);
         addView(key: string, viewOptions: ViewOptions<BusinessData, UIData, UIChromeData, ViewRenderData>): void;
@@ -125,17 +146,18 @@ declare module "UIEngine/UIContext" {
         setRenderOrder(newOrder: Array<string>): void;
         setContextKey(contextKey: string): void;
         setStateGetter(getter: () => AppState<BusinessData, UIData>): void;
-        initialize(container: Element, props: AppState<BusinessData, UIData>, chromeProps: UIChromeData): void;
-        update(state: AppState<BusinessData, UIData>): void;
-        loadRoute(route: RouteMatcher, props: AppState<BusinessData, UIData>, chromeProps: UIChromeData): void;
+        initialize(container: Element, props: AppState<BusinessData, UIData>, chromeProps: UIChromeData, appActions: AppActions<BusinessData, UIData>): void;
+        update(state: AppState<BusinessData, UIData>, appActions: AppActions<BusinessData, UIData>): void;
+        loadRoute(route: RouteMatcher, props: AppState<BusinessData, UIData>, chromeProps: UIChromeData, appActions: AppActions<BusinessData, UIData>): void;
+        setTransitionHandler(func: (entering: View<BusinessData, UIData, UIChromeData, ViewRenderData>, loadingPromise: Promise<any>, exiting?: View<BusinessData, UIData, UIChromeData, ViewRenderData>) => void): void;
         transitionViews(entering: View<BusinessData, UIData, UIChromeData, ViewRenderData>, loadingPromise: Promise<any>, exiting?: View<BusinessData, UIData, UIChromeData, ViewRenderData>): void;
     }
 }
 declare module "offside-app-container" {
     import Localize from "AppContainer/Localize";
-    import { AppState } from "AppContainer/DataModel";
+    import { AppState, AppActions, AppActor } from "AppContainer/DataModel";
     import UIContext from "UIEngine/UIContext";
-    export default class OffsideAppContainer<BusinessData, UIData, UIChromeData> {
+    export default class OffsideAppContainer<BusinessData, UIData, UIChromeData, BusinessAction, UIAction> {
         localizeSpawner: Localize;
         activeUI: UIContext<BusinessData, UIData, UIChromeData, any, any>;
         uiContexts: {
@@ -143,7 +165,13 @@ declare module "offside-app-container" {
         };
         appState: AppState<BusinessData, UIData>;
         chromeState: UIChromeData;
+        appActions: AppActions<BusinessData, UIData>;
+        appActor: AppActor<BusinessData, UIData, BusinessAction, UIAction>;
         constructor();
+        setBusinessDispatch(func: (a: BusinessAction) => void): void;
+        setBusinessActions(actionObject: any): void;
+        setUiDispatch(func: (a: UIAction) => void): void;
+        setUiActions(actionObject: any): void;
         setupLocalisation(translationResources: any): void;
         addUIContext<ViewData, ChromeData>(name: string, context: UIContext<BusinessData, UIData, UIChromeData, ViewData, ChromeData>): void;
         loadUIContext(contextName: string): void;
@@ -153,5 +181,5 @@ declare module "offside-app-container" {
         updateAppState(key: string, updateValue: any): void;
         setupRouteListeners(): void;
     }
-    export { UIContext, Localize, AppState };
+    export { UIContext, Localize, AppState, AppActions, AppActor };
 }

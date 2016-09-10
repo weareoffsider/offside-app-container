@@ -1,16 +1,18 @@
-import {AppState} from '../AppContainer/DataModel'
+import {AppState, AppActions} from '../AppContainer/DataModel'
 
 export interface ChromeOptions<BusinessData, UIData, UIChromeData, ChromeRenderData> {
   /* Create the view inside the given container */
   initializeChrome(
-    container: Element, props: AppState<BusinessData, UIData>,
-    chromeProps: UIChromeData
+    container: Element, state: AppState<BusinessData, UIData>,
+    chromeProps: UIChromeData,
+    actions: AppActions<BusinessData, UIData>
   ): ChromeRenderData;
 
   /* Send updates to the chrome on behalf of this view. */
   updateChrome(
-    container: Element, props: AppState<BusinessData, UIData>,
-    chromeProps: UIChromeData, data?: ChromeRenderData
+    container: Element, state: AppState<BusinessData, UIData>,
+    chromeProps: UIChromeData, actions: AppActions<BusinessData, UIData>,
+    data?: ChromeRenderData
   ): ChromeRenderData;
 }
 
@@ -32,15 +34,23 @@ export class Chrome<BusinessData, UIData, UIChromeData, ChromeRenderData> {
   ) {
   }
 
-  initialize (props: AppState<BusinessData, UIData>, chromeProps: UIChromeData) {
+  initialize (
+    state: AppState<BusinessData, UIData>,
+    chromeProps: UIChromeData,
+    actions: AppActions<BusinessData, UIData>
+  ) {
     this.chromeData = this.options.initializeChrome(
-      this.container, props, chromeProps
+      this.container, state, chromeProps, actions
     )
   }
 
-  update (props: AppState<BusinessData, UIData>, chromeProps: UIChromeData) {
+  update (
+    state: AppState<BusinessData, UIData>,
+    chromeProps: UIChromeData,
+    actions: AppActions<BusinessData, UIData>
+  ) {
     this.chromeData = this.options.updateChrome(
-      this.container, props, chromeProps
+      this.container, state, chromeProps,actions, this.chromeData
     )
   }
 }

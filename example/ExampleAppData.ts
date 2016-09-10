@@ -1,13 +1,25 @@
-import {AppState} from 'offside-app-container'
+import {AppState, AppActions, AppActor} from 'offside-app-container'
 
-export interface BusinessData {
-}
+export type BusinessData = Number
 
 export interface UIData {
-  title: string;
+  title: string
 }
 
+export interface BusinessAction {
+  type: string
+}
+
+export interface UIAction {
+  type: string
+}
+
+export type ExampleAppActor = AppActor<BusinessData, UIData, BusinessAction, UIAction>
 export type ExampleAppState = AppState<BusinessData, UIData>
+
+export interface ExampleAppProps extends ExampleAppState {
+  actions: AppActions<BusinessData, UIData>
+}
 
 export interface UIChromeData {
   showHeader: boolean;

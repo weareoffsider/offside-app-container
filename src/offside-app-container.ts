@@ -1,18 +1,75 @@
 import Localize, {LocalizeContext} from './AppContainer/Localize';
-import {AppState} from './AppContainer/DataModel'
+import {AppState, AppActions, AppActor} from './AppContainer/DataModel'
 import UIContext from './UIEngine/UIContext';
 
 
-export default class OffsideAppContainer<BusinessData, UIData, UIChromeData> {
+export default class OffsideAppContainer<
+  BusinessData, UIData, UIChromeData,
+  BusinessAction, UIAction
+> {
   public localizeSpawner: Localize
   public activeUI: UIContext<BusinessData, UIData, UIChromeData, any, any>
   public uiContexts: {[key: string]: UIContext<BusinessData, UIData, UIChromeData, any, any>}
   public appState: AppState<BusinessData, UIData>
   public chromeState: UIChromeData
+  public appActions: AppActions<BusinessData, UIData>
+  public appActor: AppActor<BusinessData, UIData, BusinessAction, UIAction>
 
   constructor () {
     this.uiContexts = {}
+
+    this.appActor = new AppActor<BusinessData, UIData, BusinessAction, UIAction>()
+    this.appActor.setStateGetter = this.getState.bind(this)
+    this.appActions = {
+      ui: {},
+      business: {},
+    }
   }
+
+  setBusinessDispatch(func: (a: BusinessAction) => void) {
+    this.appActor.setBusinessDispatch(func)
+  }
+
+  setBusinessActions(actionObject: any) {
+    const binder = (leaf: any) => {
+      if (typeof leaf === "object") {
+        const funcs: any = {}
+        Object.keys(leaf).forEach((funcKey) => {
+          funcs[funcKey] = binder(leaf[funcKey])
+        })
+        return funcs
+      } else if (typeof leaf === "function") {
+        return leaf.bind(this.appActor)
+      } else {
+        return leaf
+      }
+    }
+
+    this.appActions.business = binder(actionObject)
+  }
+
+  setUiDispatch(func: (a: UIAction) => void) {
+    this.appActor.setUiDispatch(func)
+  }
+
+  setUiActions(actionObject: any) {
+    const binder = (leaf: any) => {
+      if (typeof leaf === "object") {
+        const funcs: any = {}
+        Object.keys(leaf).forEach((funcKey) => {
+          funcs[funcKey] = binder(leaf[funcKey])
+        })
+        return funcs
+      } else if (typeof leaf === "function") {
+        return leaf.bind(this.appActor)
+      } else {
+        return leaf
+      }
+    }
+
+    this.appActions.ui = binder(actionObject)
+  }
+
 
   setupLocalisation (translationResources: any) {
     this.localizeSpawner = new Localize(translationResources)
@@ -53,12 +110,12 @@ export default class OffsideAppContainer<BusinessData, UIData, UIChromeData> {
   initializeUI (container: Element) {
     this.activeUI.setStateGetter(this.getState.bind(this))
     this.setupRouteListeners()
-    this.activeUI.initialize(container, this.appState, this.chromeState)
-
+    this.activeUI.initialize(
+      container, this.appState, this.chromeState, this.appActions
+    )
   }
 
   updateAppState (key: string, updateValue: any) {
-    
     const nextState: AppState<BusinessData, UIData> = {
       l10n: this.appState.l10n,
       route: this.appState.route,
@@ -67,10 +124,19 @@ export default class OffsideAppContainer<BusinessData, UIData, UIChromeData> {
       businessData: this.appState.businessData,
     }
 
+    // short circuit if no actual changes given
+    if ((nextState as any)[key] === updateValue) {
+      return
+    }
+
     if (key === "route") { nextState.route = updateValue }
+    if (key === "uiData") { nextState.uiData = updateValue }
+    if (key === "businessData") {
+      nextState.businessData = updateValue
+    }
 
     this.appState = nextState
-    this.activeUI.update(nextState)
+    this.activeUI.update(nextState, this.appActions)
   }
 
   setupRouteListeners () {
@@ -107,5 +173,7 @@ export default class OffsideAppContainer<BusinessData, UIData, UIChromeData> {
 export {
   UIContext,
   Localize,
-  AppState
+  AppState,
+  AppActions,
+  AppActor,
 }
