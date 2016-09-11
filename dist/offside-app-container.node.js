@@ -38,6 +38,30 @@ var createClass = function () {
   };
 }();
 
+var inherits = function (subClass, superClass) {
+  if (typeof superClass !== "function" && superClass !== null) {
+    throw new TypeError("Super expression must either be null or a function, not " + typeof superClass);
+  }
+
+  subClass.prototype = Object.create(superClass && superClass.prototype, {
+    constructor: {
+      value: subClass,
+      enumerable: false,
+      writable: true,
+      configurable: true
+    }
+  });
+  if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
+};
+
+var possibleConstructorReturn = function (self, call) {
+  if (!self) {
+    throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
+  }
+
+  return call && (typeof call === "object" || typeof call === "function") ? call : self;
+};
+
 var LocalizeSpawner = function () {
     function LocalizeSpawner(translationResources) {
         classCallCheck(this, LocalizeSpawner);
@@ -128,12 +152,89 @@ var LocalizeContext = function () {
     return LocalizeContext;
 }();
 
+var RequestNotFoundError = function (_Error) {
+    inherits(RequestNotFoundError, _Error);
+
+    function RequestNotFoundError(message) {
+        classCallCheck(this, RequestNotFoundError);
+
+        var _this = possibleConstructorReturn(this, (RequestNotFoundError.__proto__ || Object.getPrototypeOf(RequestNotFoundError)).call(this, message));
+
+        _this.message = message;
+        _this.name = "RequestNotFoundError";
+        return _this;
+    }
+
+    return RequestNotFoundError;
+}(Error);
+var RequestForbiddenError = function (_Error2) {
+    inherits(RequestForbiddenError, _Error2);
+
+    function RequestForbiddenError(message) {
+        classCallCheck(this, RequestForbiddenError);
+
+        var _this2 = possibleConstructorReturn(this, (RequestForbiddenError.__proto__ || Object.getPrototypeOf(RequestForbiddenError)).call(this, message));
+
+        _this2.message = message;
+        _this2.name = "RequestForbiddenError";
+        return _this2;
+    }
+
+    return RequestForbiddenError;
+}(Error);
+var RequestOfflineError = function (_Error3) {
+    inherits(RequestOfflineError, _Error3);
+
+    function RequestOfflineError(message) {
+        classCallCheck(this, RequestOfflineError);
+
+        var _this3 = possibleConstructorReturn(this, (RequestOfflineError.__proto__ || Object.getPrototypeOf(RequestOfflineError)).call(this, message));
+
+        _this3.message = message;
+        _this3.name = "RequestOfflineError";
+        return _this3;
+    }
+
+    return RequestOfflineError;
+}(Error);
+var RequestServerError = function (_Error4) {
+    inherits(RequestServerError, _Error4);
+
+    function RequestServerError(message) {
+        classCallCheck(this, RequestServerError);
+
+        var _this4 = possibleConstructorReturn(this, (RequestServerError.__proto__ || Object.getPrototypeOf(RequestServerError)).call(this, message));
+
+        _this4.message = message;
+        _this4.name = "RequestServerError";
+        return _this4;
+    }
+
+    return RequestServerError;
+}(Error);
+
 var CommsChannelStatus;
 (function (CommsChannelStatus) {
     CommsChannelStatus[CommsChannelStatus["Offline"] = 0] = "Offline";
     CommsChannelStatus[CommsChannelStatus["Idle"] = 1] = "Idle";
     CommsChannelStatus[CommsChannelStatus["Active"] = 2] = "Active";
 })(CommsChannelStatus || (CommsChannelStatus = {}));
+function defaultErrorProcessing(req, commData) {
+    console.log("ERROR PROCESS", req);
+    if (req.status === 404) {
+        return new RequestNotFoundError(req.responseURL);
+    }
+    if (req.status === 403) {
+        return new RequestForbiddenError(req.responseURL);
+    }
+    if (req.status >= 500) {
+        return new RequestServerError(req.responseURL);
+    }
+    if (req.status === 0) {
+        return new RequestOfflineError(req.responseURL);
+    }
+    return null;
+}
 
 var CommsChannel = function () {
     function CommsChannel(name, urlRoot, commData, prepareRequest, processSuccess, processError) {
@@ -151,6 +252,9 @@ var CommsChannel = function () {
             status: CommsChannelStatus.Idle,
             statusString: CommsChannelStatus[CommsChannelStatus.Idle]
         };
+        if (!this.processError) {
+            this.processError = defaultErrorProcessing;
+        }
     }
 
     createClass(CommsChannel, [{
@@ -204,26 +308,28 @@ var CommsChannel = function () {
             var _this = this;
 
             var key = this.nextRequestKey++;
+            var method = 'GET';
             return new Promise(function (resolve, reject) {
                 console.log("comms :: " + _this.name + " :: get - " + url);
                 var req = new XMLHttpRequest();
-                _this.updateRequestState(key, { url: url, progress: 0 });
+                _this.updateRequestState(key, { url: url, method: method, progress: 0 });
                 req.addEventListener("load", function () {
                     if (req.status >= 400) {
                         var result = _this.processError(req, _this.commData);
-                        _this.updateRequestState(key, { url: url, status: req.status,
+                        _this.updateRequestState(key, { url: url, method: method, status: req.status,
                             progress: 1, result: result });
                         reject(result);
                     } else {
                         var _result = _this.processSuccess(req, _this.commData);
-                        _this.updateRequestState(key, { url: url, status: req.status,
+                        _this.updateRequestState(key, { url: url, method: method, status: req.status,
                             progress: 1, result: _result });
                         resolve(_result);
                     }
                 }, false);
                 req.addEventListener("error", function () {
                     var result = _this.processError(req, _this.commData);
-                    _this.updateRequestState(key, { url: url, status: 0, progress: 1, result: result });
+                    _this.updateRequestState(key, { url: url, method: method, status: 0,
+                        progress: 1, result: result });
                     reject(result);
                 }, false);
                 req.open("GET", "" + _this.urlRoot + url);
@@ -554,9 +660,22 @@ var UIContext = function () {
             });
         }
     }, {
+        key: 'renderErrorView',
+        value: function renderErrorView(viewName, container, route, props, chromeProps, appActions, cb) {
+            var _this3 = this;
+
+            var errorView = this.viewSet[viewName].spawnView(container, route);
+            this.visibleViews[route.path] = errorView;
+            this.activeView = errorView;
+            errorView.preLoadData(this.getLatestAppState(), appActions).then(function (viewState) {
+                errorView.create(_this3.getLatestAppState(), chromeProps, appActions);
+                cb(errorView);
+            });
+        }
+    }, {
         key: 'loadRoute',
         value: function loadRoute(route, props, chromeProps, appActions) {
-            var _this3 = this;
+            var _this4 = this;
 
             if (!route.path) {
                 throw new Error("Route views can only be loaded with paths.");
@@ -570,10 +689,27 @@ var UIContext = function () {
             var view = this.viewSet[route.viewName].spawnView(container, route);
             this.visibleViews[route.path] = view;
             this.activeView = view;
-            var viewReadyPromise = view.preLoadData(props, appActions).then(function (state) {
-                console.log("Creating View", view);
-                view.create(_this3.getLatestAppState(), chromeProps, appActions);
-                view.postLoadData(_this3.getLatestAppState(), appActions);
+            var viewReadyPromise = new Promise(function (resolve, reject) {
+                view.preLoadData(props, appActions).then(function (state) {
+                    console.log("Creating View", view);
+                    view.create(_this4.getLatestAppState(), chromeProps, appActions);
+                    view.postLoadData(_this4.getLatestAppState(), appActions);
+                    resolve(view);
+                }, function (error) {
+                    if (error.name === "RequestNotFoundError" && _this4.viewSet["**404"]) {
+                        return _this4.renderErrorView("**404", container, route, props, chromeProps, appActions, resolve);
+                    } else if (error.name === "RequestForbiddenError" && _this4.viewSet["**403"]) {
+                        return _this4.renderErrorView("**403", container, route, props, chromeProps, appActions, resolve);
+                    } else if (error.name === "RequestServerError" && _this4.viewSet["**500"]) {
+                        return _this4.renderErrorView("**500", container, route, props, chromeProps, appActions, resolve);
+                    } else if (error.name === "RequestOfflineError" && _this4.viewSet["**offline"]) {
+                        return _this4.renderErrorView("**offline", container, route, props, chromeProps, appActions, resolve);
+                    } else {
+                        console.log("Errored Out", error, view);
+                    }
+                    container.innerHTML = '\n            UNHANDLED ERROR IN APPLICATION<br/>\n            You are missing an error view handler, **404, **403, **500 or offline\n          ';
+                    resolve(error);
+                });
             });
             console.log("Loading route", route);
             this.transitionViews(this.activeView, viewReadyPromise, this.exitingView);
@@ -586,7 +722,7 @@ var UIContext = function () {
     }, {
         key: 'transitionViews',
         value: function transitionViews(entering, loadingPromise, exiting) {
-            var _this4 = this;
+            var _this5 = this;
 
             if (this.transitionHandler) {
                 this.transitionHandler(entering, loadingPromise, exiting);
@@ -594,8 +730,8 @@ var UIContext = function () {
                 (function () {
                     // default transition handling
                     var enterContainer = entering.container;
-                    var enterClass = _this4.contextKey + '-enteringView';
-                    var exitClass = _this4.contextKey + '-exitingView';
+                    var enterClass = _this5.contextKey + '-enteringView';
+                    var exitClass = _this5.contextKey + '-exitingView';
                     enterContainer.classList.add(enterClass);
                     if (exiting) {
                         var exitContainer = exiting.container;
@@ -634,30 +770,32 @@ var OffsideAppContainer = function () {
             this.appActor.setBusinessDispatch(func);
         }
     }, {
-        key: 'setBusinessActions',
-        value: function setBusinessActions(actionObject) {
+        key: 'bindActor',
+        value: function bindActor(leaf) {
             var _this = this;
 
-            var binder = function binder(leaf) {
-                if ((typeof leaf === 'undefined' ? 'undefined' : _typeof(leaf)) === "object") {
-                    var _ret = function () {
-                        var funcs = {};
-                        Object.keys(leaf).forEach(function (funcKey) {
-                            funcs[funcKey] = binder(leaf[funcKey]);
-                        });
-                        return {
-                            v: funcs
-                        };
-                    }();
+            if ((typeof leaf === 'undefined' ? 'undefined' : _typeof(leaf)) === "object") {
+                var _ret = function () {
+                    var funcs = {};
+                    Object.keys(leaf).forEach(function (funcKey) {
+                        funcs[funcKey] = _this.bindActor(leaf[funcKey]);
+                    });
+                    return {
+                        v: funcs
+                    };
+                }();
 
-                    if ((typeof _ret === 'undefined' ? 'undefined' : _typeof(_ret)) === "object") return _ret.v;
-                } else if (typeof leaf === "function") {
-                    return leaf.bind(_this.appActor);
-                } else {
-                    return leaf;
-                }
-            };
-            this.appActions.business = binder(actionObject);
+                if ((typeof _ret === 'undefined' ? 'undefined' : _typeof(_ret)) === "object") return _ret.v;
+            } else if (typeof leaf === "function") {
+                return leaf.bind(this.appActor);
+            } else {
+                return leaf;
+            }
+        }
+    }, {
+        key: 'setBusinessActions',
+        value: function setBusinessActions(actionObject) {
+            this.appActions.business = this.bindActor(actionObject);
         }
     }, {
         key: 'addCommsChannel',
@@ -674,28 +812,7 @@ var OffsideAppContainer = function () {
     }, {
         key: 'setUiActions',
         value: function setUiActions(actionObject) {
-            var _this2 = this;
-
-            var binder = function binder(leaf) {
-                if ((typeof leaf === 'undefined' ? 'undefined' : _typeof(leaf)) === "object") {
-                    var _ret2 = function () {
-                        var funcs = {};
-                        Object.keys(leaf).forEach(function (funcKey) {
-                            funcs[funcKey] = binder(leaf[funcKey]);
-                        });
-                        return {
-                            v: funcs
-                        };
-                    }();
-
-                    if ((typeof _ret2 === 'undefined' ? 'undefined' : _typeof(_ret2)) === "object") return _ret2.v;
-                } else if (typeof leaf === "function") {
-                    return leaf.bind(_this2.appActor);
-                } else {
-                    return leaf;
-                }
-            };
-            this.appActions.ui = binder(actionObject);
+            this.appActions.ui = this.bindActor(actionObject);
         }
     }, {
         key: 'setupLocalisation',
@@ -716,7 +833,7 @@ var OffsideAppContainer = function () {
     }, {
         key: 'initializeAppState',
         value: function initializeAppState(lang, businessData, uiData, chromeData) {
-            var _this3 = this;
+            var _this2 = this;
 
             if (!this.activeUI) {
                 throw new Error("UI Context must be loaded before initializing app.");
@@ -725,7 +842,7 @@ var OffsideAppContainer = function () {
             var route = this.activeUI.getMatchFromRoute(window.location.pathname);
             var comms = {};
             Object.keys(this.commsChannels).forEach(function (name) {
-                comms[name] = _this3.commsChannels[name].getState();
+                comms[name] = _this2.commsChannels[name].getState();
             });
             var routes = this.activeUI.routeTable;
             this.appState = { l10n: l10n, uiData: uiData, businessData: businessData, route: route, routes: routes, comms: comms };
@@ -746,11 +863,11 @@ var OffsideAppContainer = function () {
     }, {
         key: 'updateCommsState',
         value: function updateCommsState(key, state) {
-            var _this4 = this;
+            var _this3 = this;
 
             var nextComms = {};
             Object.keys(this.appState.comms).forEach(function (name) {
-                nextComms[name] = _this4.appState.comms[name];
+                nextComms[name] = _this3.appState.comms[name];
             });
             nextComms[key] = state;
             this.updateAppState("comms", nextComms);
@@ -789,7 +906,7 @@ var OffsideAppContainer = function () {
     }, {
         key: 'setupRouteListeners',
         value: function setupRouteListeners() {
-            var _this5 = this;
+            var _this4 = this;
 
             document.addEventListener("click", function (e) {
                 var target = e.target;
@@ -802,20 +919,20 @@ var OffsideAppContainer = function () {
                         return;
                     }
                     e.preventDefault();
-                    var route = _this5.activeUI.getMatchFromRoute(path);
+                    var route = _this4.activeUI.getMatchFromRoute(path);
                     window.history.pushState(null, "", path);
-                    _this5.updateAppState("route", route);
+                    _this4.updateAppState("route", route);
                 }
             });
             window.onpopstate = function (event) {
                 var path = window.location.pathname;
-                var route = _this5.activeUI.getMatchFromRoute(path);
-                _this5.updateAppState("route", route);
+                var route = _this4.activeUI.getMatchFromRoute(path);
+                _this4.updateAppState("route", route);
             };
             window.onpageshow = function (event) {
                 var path = window.location.pathname;
-                var route = _this5.activeUI.getMatchFromRoute(path);
-                _this5.updateAppState("route", route);
+                var route = _this4.activeUI.getMatchFromRoute(path);
+                _this4.updateAppState("route", route);
             };
         }
     }]);

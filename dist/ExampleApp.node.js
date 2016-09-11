@@ -72,9 +72,10 @@ var Header = function (_React$Component) {
             var _props = this.props;
             var l10n = _props.l10n;
             var uiData = _props.uiData;
+            var routes = _props.routes;
 
             var t_ = l10n.translate;
-            return React.createElement("header", { className: "Header", style: { marginBottom: "8rem" } }, React.createElement("h1", null, t_("app_title"), " ", uiData.title));
+            return React.createElement("header", { className: "Header", style: { marginBottom: "8rem" } }, React.createElement("h1", null, t_("app_title"), " ", uiData.title), React.createElement("ul", null, React.createElement("li", null, React.createElement("a", { href: routes.getPath('home') }, t_('home'))), React.createElement("li", null, React.createElement("a", { href: routes.getPath('about') }, t_('about'))), React.createElement("li", null, React.createElement("a", { href: routes.getPath('always404') }, t_('always404')))));
         }
     }]);
     return Header;
@@ -156,6 +157,34 @@ var AboutPage = function (_React$Component) {
         }
     }]);
     return AboutPage;
+}(React.Component);
+
+var Always404Page = function (_React$Component) {
+    inherits(Always404Page, _React$Component);
+
+    function Always404Page() {
+        classCallCheck(this, Always404Page);
+        return possibleConstructorReturn(this, (Always404Page.__proto__ || Object.getPrototypeOf(Always404Page)).apply(this, arguments));
+    }
+
+    createClass(Always404Page, [{
+        key: "render",
+        value: function render() {
+            var _props = this.props;
+            var l10n = _props.l10n;
+            var routes = _props.routes;
+
+            var t_ = l10n.translate;
+            return React.createElement("section", { className: "AboutPage" }, React.createElement("h1", null, "App Body in About Page"), React.createElement("a", { href: routes.getPath('home') }, t_('home')));
+        }
+    }], [{
+        key: "preLoad",
+        value: function preLoad(state, actions) {
+            console.log("preloading");
+            return actions.comms['placeholder'].get("/gruzzlepunk");
+        }
+    }]);
+    return Always404Page;
 }(React.Component);
 
 var __assign = undefined && undefined.__assign || Object.assign || function (t) {
@@ -277,8 +306,6 @@ var placeholderComms = new OffsideAppContainer.CommsChannel("placeholder", "http
     return;
 }, function (req) {
     return JSON.parse(req.responseText);
-}, function (req) {
-    return JSON.parse(req.responseText);
 });
 app.addCommsChannel(placeholderComms);
 var mainUI = new OffsideAppContainer.UIContext("");
@@ -287,8 +314,12 @@ mainUI.addChrome("footer", reactChrome(Footer));
 mainUI.setRenderOrder(["header", "**views", "footer"]);
 mainUI.addView("home", reactView(Header$1));
 mainUI.addView("about", reactView(AboutPage));
+mainUI.addView("always404", reactView(Always404Page));
+// mainUI.addView("**404", reactView(NotFoundPage))
+// mainUI.addView("**offline", reactView(OfflinePage))
 mainUI.addRoute("/", "home");
 mainUI.addRoute("/about", "about");
+mainUI.addRoute("/always404", "always404");
 app.addUIContext("main", mainUI);
 app.setupLocalisation({
     en: enLang

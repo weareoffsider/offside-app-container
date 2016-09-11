@@ -19,6 +19,28 @@ declare module "AppContainer/Localize" {
         numericDate(datetime: any): string;
     }
 }
+declare module "Comms/Errors" {
+    export class RequestNotFoundError extends Error {
+        message: string;
+        name: string;
+        constructor(message?: string);
+    }
+    export class RequestForbiddenError extends Error {
+        message: string;
+        name: string;
+        constructor(message?: string);
+    }
+    export class RequestOfflineError extends Error {
+        message: string;
+        name: string;
+        constructor(message?: string);
+    }
+    export class RequestServerError extends Error {
+        message: string;
+        name: string;
+        constructor(message?: string);
+    }
+}
 declare module "Comms/CommsChannel" {
     export interface CommsActions {
         get: (url: string) => Promise<any>;
@@ -30,6 +52,7 @@ declare module "Comms/CommsChannel" {
     }
     export interface CommsChannelRequest {
         url: string;
+        method: string;
         progress: number;
         status?: number;
         result?: any;
@@ -39,6 +62,7 @@ declare module "Comms/CommsChannel" {
         status: CommsChannelStatus;
         statusString: string;
     }
+    export function defaultErrorProcessing<CommData>(req: any, commData?: CommData): any;
     export default class CommsChannel<CommData> {
         name: string;
         urlRoot: string;
@@ -49,7 +73,7 @@ declare module "Comms/CommsChannel" {
         private nextRequestKey;
         private state;
         private updateCommsState;
-        constructor(name: string, urlRoot: string, commData: CommData, prepareRequest: (req: XMLHttpRequest, commData?: CommData) => void, processSuccess: (req: XMLHttpRequest, commData?: CommData) => any, processError: (req: XMLHttpRequest, commData?: CommData) => any);
+        constructor(name: string, urlRoot: string, commData: CommData, prepareRequest: (req: XMLHttpRequest, commData?: CommData) => void, processSuccess: (req: XMLHttpRequest, commData?: CommData) => any, processError?: (req: XMLHttpRequest, commData?: CommData) => any);
         setStateSetter(func: (name: string, state: CommsChannelState) => void): void;
         getState(): CommsChannelState;
         updateRequestState(key: number, request: CommsChannelRequest): void;
@@ -192,6 +216,7 @@ declare module "UIEngine/UIContext" {
         setStateGetter(getter: () => AppState<BusinessData, UIData>): void;
         initialize(container: Element, props: AppState<BusinessData, UIData>, chromeProps: UIChromeData, appActions: AppActions<BusinessData, UIData>): void;
         update(state: AppState<BusinessData, UIData>, appActions: AppActions<BusinessData, UIData>): void;
+        renderErrorView(viewName: string, container: Element, route: RouteMatcher, props: AppState<BusinessData, UIData>, chromeProps: UIChromeData, appActions: AppActions<BusinessData, UIData>, cb: any): void;
         loadRoute(route: RouteMatcher, props: AppState<BusinessData, UIData>, chromeProps: UIChromeData, appActions: AppActions<BusinessData, UIData>): void;
         setTransitionHandler(func: (entering: View<BusinessData, UIData, UIChromeData, ViewRenderData>, loadingPromise: Promise<any>, exiting?: View<BusinessData, UIData, UIChromeData, ViewRenderData>) => void): void;
         transitionViews(entering: View<BusinessData, UIData, UIChromeData, ViewRenderData>, loadingPromise: Promise<any>, exiting?: View<BusinessData, UIData, UIChromeData, ViewRenderData>): void;
@@ -217,6 +242,7 @@ declare module "offside-app-container" {
         appActor: AppActor<BusinessData, UIData, BusinessAction, UIAction>;
         constructor();
         setBusinessDispatch(func: (a: BusinessAction) => void): void;
+        bindActor(leaf: any): any;
         setBusinessActions(actionObject: any): void;
         addCommsChannel(commsChannel: CommsChannel<any>): void;
         setUiDispatch(func: (a: UIAction) => void): void;
@@ -232,4 +258,11 @@ declare module "offside-app-container" {
         setupRouteListeners(): void;
     }
     export { UIContext, CommsChannel, Localize, AppState, AppActions, AppActor };
+}
+declare module "Forms/FormDefinition" {
+    export default class FormDefinition {
+        name: string;
+        private steps;
+        constructor(name: string);
+    }
 }

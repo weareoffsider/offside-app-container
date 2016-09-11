@@ -5,6 +5,9 @@ import Header from "./chrome/Header"
 import Footer from "./chrome/Footer"
 import HomePage from "./views/HomePage"
 import AboutPage from "./views/AboutPage"
+import NotFoundPage from "./views/NotFoundPage"
+import OfflinePage from "./views/OfflinePage"
+import Always404Page from "./views/Always404Page"
 import reactChrome from "./reactChrome"
 import reactView from "./reactView"
 const enLang = require("json!./translation.json")
@@ -30,9 +33,6 @@ const placeholderComms = new CommsChannel<any>(
   },
   function (req: XMLHttpRequest) {
     return JSON.parse(req.responseText)
-  },
-  function (req: XMLHttpRequest) {
-    return JSON.parse(req.responseText)
   }
 )
 
@@ -49,9 +49,13 @@ mainUI.setRenderOrder([
 
 mainUI.addView("home", reactView(HomePage))
 mainUI.addView("about", reactView(AboutPage))
+mainUI.addView("always404", reactView(Always404Page))
+// mainUI.addView("**404", reactView(NotFoundPage))
+// mainUI.addView("**offline", reactView(OfflinePage))
 
 mainUI.addRoute("/", "home")
 mainUI.addRoute("/about", "about")
+mainUI.addRoute("/always404", "always404")
 
 app.addUIContext("main", mainUI)
 app.setupLocalisation({

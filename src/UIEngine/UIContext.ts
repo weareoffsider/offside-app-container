@@ -2,6 +2,10 @@ import ViewDefinition, {ViewOptions, View} from './View'
 import ChromeDefinition, {ChromeOptions, Chrome} from './Chrome'
 import RouteTable, {RouteMatcher} from './RouteTable'
 import {AppState, AppActions} from '../AppContainer/DataModel'
+import {
+  RequestServerError, RequestOfflineError,
+  RequestForbiddenError, RequestNotFoundError
+} from '../Comms/Errors'
 
 export default class UIContext<BusinessData, UIData, UIChromeData,
                                ViewRenderData, ChromeRenderData> {
@@ -118,6 +122,25 @@ export default class UIContext<BusinessData, UIData, UIChromeData,
     })
   }
 
+  renderErrorView (
+    viewName: string,
+    container: Element,
+    route: RouteMatcher,
+    props: AppState<BusinessData, UIData>,
+    chromeProps: UIChromeData,
+    appActions: AppActions<BusinessData, UIData>,
+    cb: any
+  ) {
+    const errorView = this.viewSet[viewName].spawnView(container, route)
+    this.visibleViews[route.path] = errorView
+    this.activeView = errorView
+    errorView.preLoadData(this.getLatestAppState(), appActions)
+      .then((viewState: any) => {
+        errorView.create(this.getLatestAppState(), chromeProps, appActions)
+        cb(errorView)
+      })
+  }
+
   loadRoute (
       route: RouteMatcher,
       props: AppState<BusinessData, UIData>,
@@ -139,12 +162,42 @@ export default class UIContext<BusinessData, UIData, UIChromeData,
     const view = this.viewSet[route.viewName].spawnView(container, route)
     this.visibleViews[route.path] = view
     this.activeView = view
-    const viewReadyPromise = view.preLoadData(props, appActions)
+    const viewReadyPromise = new Promise((resolve, reject) => {
+      view.preLoadData(props, appActions)
         .then((state) => {
           console.log("Creating View", view)
           view.create(this.getLatestAppState(), chromeProps, appActions)
           view.postLoadData(this.getLatestAppState(), appActions)
+          resolve(view)
+        }, (error) => {
+          if (error.name === "RequestNotFoundError" && this.viewSet["**404"]) {
+            return this.renderErrorView(
+              "**404", container, route, props,
+              chromeProps, appActions, resolve
+            )
+          } else if (error.name === "RequestForbiddenError" && this.viewSet["**403"]) {
+            return this.renderErrorView(
+              "**403", container, route, props, chromeProps, appActions, resolve
+            )
+          } else if (error.name === "RequestServerError" && this.viewSet["**500"]) {
+            return this.renderErrorView(
+              "**500", container, route, props, chromeProps, appActions, resolve
+            )
+          } else if (error.name === "RequestOfflineError" && this.viewSet["**offline"]) {
+            return this.renderErrorView(
+              "**offline", container, route, props, chromeProps, appActions, resolve
+            )
+          } else {
+            console.log("Errored Out", error, view)
+          }
+
+          container.innerHTML = `
+            UNHANDLED ERROR IN APPLICATION<br/>
+            You are missing an error view handler, **404, **403, **500 or offline
+          `
+          resolve(error)
         })
+    })
 
     console.log("Loading route", route)
     this.transitionViews(this.activeView, viewReadyPromise, this.exitingView)

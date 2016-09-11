@@ -34,22 +34,22 @@ export default class OffsideAppContainer<
     this.appActor.setBusinessDispatch(func)
   }
 
-  setBusinessActions(actionObject: any) {
-    const binder = (leaf: any) => {
-      if (typeof leaf === "object") {
-        const funcs: any = {}
-        Object.keys(leaf).forEach((funcKey) => {
-          funcs[funcKey] = binder(leaf[funcKey])
-        })
-        return funcs
-      } else if (typeof leaf === "function") {
-        return leaf.bind(this.appActor)
-      } else {
-        return leaf
-      }
+  bindActor (leaf: any): any {
+    if (typeof leaf === "object") {
+      const funcs: any = {}
+      Object.keys(leaf).forEach((funcKey) => {
+        funcs[funcKey] = this.bindActor(leaf[funcKey])
+      })
+      return funcs
+    } else if (typeof leaf === "function") {
+      return leaf.bind(this.appActor)
+    } else {
+      return leaf
     }
+  }
 
-    this.appActions.business = binder(actionObject)
+  setBusinessActions(actionObject: any) {
+    this.appActions.business = this.bindActor(actionObject)
   }
 
   addCommsChannel(commsChannel: CommsChannel<any>) {
@@ -63,21 +63,7 @@ export default class OffsideAppContainer<
   }
 
   setUiActions(actionObject: any) {
-    const binder = (leaf: any) => {
-      if (typeof leaf === "object") {
-        const funcs: any = {}
-        Object.keys(leaf).forEach((funcKey) => {
-          funcs[funcKey] = binder(leaf[funcKey])
-        })
-        return funcs
-      } else if (typeof leaf === "function") {
-        return leaf.bind(this.appActor)
-      } else {
-        return leaf
-      }
-    }
-
-    this.appActions.ui = binder(actionObject)
+    this.appActions.ui = this.bindActor(actionObject)
   }
 
 
