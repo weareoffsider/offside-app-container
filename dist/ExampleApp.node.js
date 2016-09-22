@@ -119,7 +119,7 @@ var Header$1 = function (_React$Component) {
             var actions = _props.actions;
 
             var t_ = l10n.translate;
-            return React.createElement("section", { className: "HomePage" }, React.createElement("h1", null, "App Body in Heyah"), React.createElement("button", { onClick: actions.ui.swapTitle }, t_('swap_title')), React.createElement("h3", null, "Counter"), React.createElement("button", { onClick: actions.business.decrement }, "-"), React.createElement("span", null, businessData), React.createElement("button", { onClick: actions.business.increment }, "+"), React.createElement("br", null), React.createElement("br", null), React.createElement("a", { href: routes.getPath('about') }, t_('about')));
+            return React.createElement("section", { className: "HomePage" }, React.createElement("h1", null, "App Body in Heyah"), React.createElement("button", { onClick: actions.ui.swapTitle }, t_('swap_title')), React.createElement("h3", null, "Counter"), React.createElement("button", { onClick: actions.business.decrement }, "-"), React.createElement("span", null, businessData), React.createElement("button", { onClick: actions.business.increment }, "+"), React.createElement("br", null), React.createElement("br", null), React.createElement("a", { href: routes.getPath('about') }, t_('about')), React.createElement("br", null), React.createElement("a", { href: routes.getPath('registration') }, t_('registration')));
         }
     }], [{
         key: "preLoad",
@@ -157,6 +157,80 @@ var AboutPage = function (_React$Component) {
         }
     }]);
     return AboutPage;
+}(React.Component);
+
+var RegistrationPage = function (_React$Component) {
+    inherits(RegistrationPage, _React$Component);
+
+    function RegistrationPage() {
+        classCallCheck(this, RegistrationPage);
+        return possibleConstructorReturn(this, (RegistrationPage.__proto__ || Object.getPrototypeOf(RegistrationPage)).apply(this, arguments));
+    }
+
+    createClass(RegistrationPage, [{
+        key: "render",
+        value: function render() {
+            var _props = this.props;
+            var l10n = _props.l10n;
+            var routes = _props.routes;
+            var businessData = _props.businessData;
+            var actions = _props.actions;
+
+            var t_ = l10n.translate;
+            return React.createElement("section", { className: "HomePage" }, React.createElement("h1", null, t_('registration')));
+        }
+    }], [{
+        key: "preLoad",
+        value: function preLoad(state, actions) {
+            return Promise.resolve(true);
+        }
+    }]);
+    return RegistrationPage;
+}(React.Component);
+
+var NotFoundPage = function (_React$Component) {
+    inherits(NotFoundPage, _React$Component);
+
+    function NotFoundPage() {
+        classCallCheck(this, NotFoundPage);
+        return possibleConstructorReturn(this, (NotFoundPage.__proto__ || Object.getPrototypeOf(NotFoundPage)).apply(this, arguments));
+    }
+
+    createClass(NotFoundPage, [{
+        key: "render",
+        value: function render() {
+            var _props = this.props;
+            var l10n = _props.l10n;
+            var routes = _props.routes;
+
+            var t_ = l10n.translate;
+            console.log("render NotFoundPage");
+            return React.createElement("section", { className: "NotFoundPage" }, React.createElement("h1", null, "404"), React.createElement("p", null, "Your page could not be found"), React.createElement("a", { href: routes.getPath('home') }, t_('home')));
+        }
+    }]);
+    return NotFoundPage;
+}(React.Component);
+
+var OfflinePage = function (_React$Component) {
+    inherits(OfflinePage, _React$Component);
+
+    function OfflinePage() {
+        classCallCheck(this, OfflinePage);
+        return possibleConstructorReturn(this, (OfflinePage.__proto__ || Object.getPrototypeOf(OfflinePage)).apply(this, arguments));
+    }
+
+    createClass(OfflinePage, [{
+        key: "render",
+        value: function render() {
+            var _props = this.props;
+            var l10n = _props.l10n;
+            var routes = _props.routes;
+
+            var t_ = l10n.translate;
+            return React.createElement("section", { className: "NotFoundPage" }, React.createElement("h1", null, "Offline"), React.createElement("p", null, "Your connection is offline."), React.createElement("a", { href: routes.getPath('home') }, t_('home')));
+        }
+    }]);
+    return OfflinePage;
 }(React.Component);
 
 var Always404Page = function (_React$Component) {
@@ -314,11 +388,13 @@ mainUI.addChrome("footer", reactChrome(Footer));
 mainUI.setRenderOrder(["header", "**views", "footer"]);
 mainUI.addView("home", reactView(Header$1));
 mainUI.addView("about", reactView(AboutPage));
+mainUI.addView("registration", reactView(RegistrationPage));
 mainUI.addView("always404", reactView(Always404Page));
-// mainUI.addView("**404", reactView(NotFoundPage))
-// mainUI.addView("**offline", reactView(OfflinePage))
+mainUI.addView("**404", reactView(NotFoundPage));
+mainUI.addView("**offline", reactView(OfflinePage));
 mainUI.addRoute("/", "home");
 mainUI.addRoute("/about", "about");
+mainUI.addRoute("/registration", "registration");
 mainUI.addRoute("/always404", "always404");
 app.addUIContext("main", mainUI);
 app.setupLocalisation({

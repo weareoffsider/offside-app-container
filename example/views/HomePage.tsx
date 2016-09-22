@@ -25,6 +25,8 @@ export default class Header extends React.Component<ExampleAppProps, any> {
       <br />
       <br />
       <a href={routes.getPath('about')}>{t_('about')}</a>
+      <br />
+      <a href={routes.getPath('registration')}>{t_('registration')}</a>
     </section>
   }
 }

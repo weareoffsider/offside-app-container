@@ -3,11 +3,16 @@ var using = require("gulp-using")
 var cloneDeep = require("lodash/cloneDeep")
 var ts = require("gulp-typescript")
 var rename = require("gulp-rename")
+var typescript = require("typescript")
 var rollup = require("rollup-stream")
 var source = require("vinyl-source-stream")
 var nodeResolve = require("rollup-plugin-node-resolve")
-var tsProject = ts.createProject("tsconfig.json")
-var dtsProject = ts.createProject("dtsconfig.json")
+var tsProject = ts.createProject("tsconfig.json", {
+  typescript: typescript,
+})
+var dtsProject = ts.createProject("dtsconfig.json", {
+  typescript: typescript,
+})
 
 var webpack = require('webpack-stream');
 

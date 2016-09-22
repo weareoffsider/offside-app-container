@@ -170,6 +170,9 @@ export default class UIContext<BusinessData, UIData, UIChromeData,
           view.postLoadData(this.getLatestAppState(), appActions)
           resolve(view)
         }, (error) => {
+
+          console.log(error);
+          console.log(error.name);
           if (error.name === "RequestNotFoundError" && this.viewSet["**404"]) {
             return this.renderErrorView(
               "**404", container, route, props,

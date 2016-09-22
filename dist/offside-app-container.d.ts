@@ -21,24 +21,24 @@ declare module "AppContainer/Localize" {
 }
 declare module "Comms/Errors" {
     export class RequestNotFoundError extends Error {
-        message: string;
+        readonly message: string;
         name: string;
-        constructor(message?: string);
+        constructor(message: string);
     }
     export class RequestForbiddenError extends Error {
-        message: string;
+        readonly message: string;
         name: string;
-        constructor(message?: string);
+        constructor(message: string);
     }
     export class RequestOfflineError extends Error {
-        message: string;
+        readonly message: string;
         name: string;
-        constructor(message?: string);
+        constructor(message: string);
     }
     export class RequestServerError extends Error {
-        message: string;
+        readonly message: string;
         name: string;
-        constructor(message?: string);
+        constructor(message: string);
     }
 }
 declare module "Comms/CommsChannel" {
@@ -136,6 +136,33 @@ declare module "AppContainer/DataModel" {
         dispatch: (action: BusinessAction) => void;
     }
 }
+declare module "Forms/FormDefinition" {
+    export default class FormDefinition {
+        name: string;
+        private steps;
+        constructor(name: string);
+    }
+}
+declare module "UIEngine/Chrome" {
+    import { AppState, AppActions } from "AppContainer/DataModel";
+    export interface ChromeOptions<BusinessData, UIData, UIChromeData, ChromeRenderData> {
+        initializeChrome(container: Element, state: AppState<BusinessData, UIData>, chromeProps: UIChromeData, actions: AppActions<BusinessData, UIData>): ChromeRenderData;
+        updateChrome(container: Element, state: AppState<BusinessData, UIData>, chromeProps: UIChromeData, actions: AppActions<BusinessData, UIData>, data?: ChromeRenderData): ChromeRenderData;
+    }
+    export default class ChromeDefinition<BusinessData, UIData, UIChromeData, ChromeRenderData> {
+        private options;
+        constructor(options: ChromeOptions<BusinessData, UIData, UIChromeData, ChromeRenderData>);
+        getOptions(): ChromeOptions<BusinessData, UIData, UIChromeData, ChromeRenderData>;
+    }
+    export class Chrome<BusinessData, UIData, UIChromeData, ChromeRenderData> {
+        private container;
+        private options;
+        private chromeData;
+        constructor(container: Element, options: ChromeOptions<BusinessData, UIData, UIChromeData, ChromeRenderData>);
+        initialize(state: AppState<BusinessData, UIData>, chromeProps: UIChromeData, actions: AppActions<BusinessData, UIData>): void;
+        update(state: AppState<BusinessData, UIData>, chromeProps: UIChromeData, actions: AppActions<BusinessData, UIData>): void;
+    }
+}
 declare module "UIEngine/View" {
     import { AppState, AppActions } from "AppContainer/DataModel";
     import { RouteMatcher } from "UIEngine/RouteTable";
@@ -164,26 +191,6 @@ declare module "UIEngine/View" {
         create(state: AppState<BusinessData, UIData>, chromeData: UIChromeData, actions: AppActions<BusinessData, UIData>): UIChromeData;
         update(state: AppState<BusinessData, UIData>, chromeData: UIChromeData, actions: AppActions<BusinessData, UIData>): UIChromeData;
         destroy(): void;
-    }
-}
-declare module "UIEngine/Chrome" {
-    import { AppState, AppActions } from "AppContainer/DataModel";
-    export interface ChromeOptions<BusinessData, UIData, UIChromeData, ChromeRenderData> {
-        initializeChrome(container: Element, state: AppState<BusinessData, UIData>, chromeProps: UIChromeData, actions: AppActions<BusinessData, UIData>): ChromeRenderData;
-        updateChrome(container: Element, state: AppState<BusinessData, UIData>, chromeProps: UIChromeData, actions: AppActions<BusinessData, UIData>, data?: ChromeRenderData): ChromeRenderData;
-    }
-    export default class ChromeDefinition<BusinessData, UIData, UIChromeData, ChromeRenderData> {
-        private options;
-        constructor(options: ChromeOptions<BusinessData, UIData, UIChromeData, ChromeRenderData>);
-        getOptions(): ChromeOptions<BusinessData, UIData, UIChromeData, ChromeRenderData>;
-    }
-    export class Chrome<BusinessData, UIData, UIChromeData, ChromeRenderData> {
-        private container;
-        private options;
-        private chromeData;
-        constructor(container: Element, options: ChromeOptions<BusinessData, UIData, UIChromeData, ChromeRenderData>);
-        initialize(state: AppState<BusinessData, UIData>, chromeProps: UIChromeData, actions: AppActions<BusinessData, UIData>): void;
-        update(state: AppState<BusinessData, UIData>, chromeProps: UIChromeData, actions: AppActions<BusinessData, UIData>): void;
     }
 }
 declare module "UIEngine/UIContext" {
@@ -258,11 +265,4 @@ declare module "offside-app-container" {
         setupRouteListeners(): void;
     }
     export { UIContext, CommsChannel, Localize, AppState, AppActions, AppActor };
-}
-declare module "Forms/FormDefinition" {
-    export default class FormDefinition {
-        name: string;
-        private steps;
-        constructor(name: string);
-    }
 }

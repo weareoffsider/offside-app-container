@@ -696,6 +696,8 @@ var UIContext = function () {
                     view.postLoadData(_this4.getLatestAppState(), appActions);
                     resolve(view);
                 }, function (error) {
+                    console.log(error);
+                    console.log(error.name);
                     if (error.name === "RequestNotFoundError" && _this4.viewSet["**404"]) {
                         return _this4.renderErrorView("**404", container, route, props, chromeProps, appActions, resolve);
                     } else if (error.name === "RequestForbiddenError" && _this4.viewSet["**403"]) {
