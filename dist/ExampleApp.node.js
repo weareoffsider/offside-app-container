@@ -159,34 +159,59 @@ var AboutPage = function (_React$Component) {
     return AboutPage;
 }(React.Component);
 
+var FORM_KEY = "registration";
+var STEP_KEY = "default";
+
 var RegistrationPage = function (_React$Component) {
     inherits(RegistrationPage, _React$Component);
 
-    function RegistrationPage() {
+    function RegistrationPage(props, context) {
         classCallCheck(this, RegistrationPage);
-        return possibleConstructorReturn(this, (RegistrationPage.__proto__ || Object.getPrototypeOf(RegistrationPage)).apply(this, arguments));
+
+        var _this = possibleConstructorReturn(this, (RegistrationPage.__proto__ || Object.getPrototypeOf(RegistrationPage)).call(this, props, context));
+
+        _this.updateField = _this.updateField.bind(_this);
+        return _this;
     }
 
     createClass(RegistrationPage, [{
+        key: "updateField",
+        value: function updateField(e) {
+            var actions = this.props.actions;
+
+            actions.forms.updateField(FORM_KEY, STEP_KEY, e.target.name, e.target.value);
+        }
+    }, {
         key: "render",
         value: function render() {
             var _props = this.props;
             var l10n = _props.l10n;
             var routes = _props.routes;
+            var forms = _props.forms;
             var businessData = _props.businessData;
             var actions = _props.actions;
 
+            var formData = forms[FORM_KEY].steps[STEP_KEY].data;
+            var errorData = forms[FORM_KEY].steps[STEP_KEY].errors;
             var t_ = l10n.translate;
-            return React.createElement("section", { className: "HomePage" }, React.createElement("h1", null, t_('registration')));
+            return React.createElement("section", { className: "HomePage" }, React.createElement("h1", null, t_('registration')), React.createElement("label", { htmlFor: "username" }, t_("username"), " ", React.createElement("br", null), React.createElement("input", { onChange: this.updateField, id: "username", name: "username", value: formData.username })), React.createElement("br", null), React.createElement("br", null), React.createElement("label", { htmlFor: "email" }, t_("email"), " ", React.createElement("br", null), React.createElement("input", { onChange: this.updateField, id: "email", type: "email", name: "email", value: formData.email })), React.createElement("br", null), React.createElement("br", null), React.createElement("label", { htmlFor: "password" }, t_("password"), " ", React.createElement("br", null), React.createElement("input", { onChange: this.updateField, id: "password", type: "password", name: "password", value: formData.password })));
         }
     }], [{
         key: "preLoad",
         value: function preLoad(state, actions) {
+            actions.forms.init(FORM_KEY);
             return Promise.resolve(true);
         }
     }]);
     return RegistrationPage;
 }(React.Component);
+
+var RegistrationForm = new OffsideAppContainer.FormDefinition("registration");
+var registrationStep = new OffsideAppContainer.FormStepDefinition(STEP_KEY);
+RegistrationForm.addStep(STEP_KEY, registrationStep);
+registrationStep.addField("username", new OffsideAppContainer.FormFieldDefinition("text"));
+registrationStep.addField("email", new OffsideAppContainer.FormFieldDefinition("email"));
+registrationStep.addField("password", new OffsideAppContainer.FormFieldDefinition("password"));
 
 var NotFoundPage = function (_React$Component) {
     inherits(NotFoundPage, _React$Component);
@@ -374,6 +399,7 @@ var app = new OffsideAppContainer__default();
 var container = document.getElementById("app-container");
 app.setBusinessDispatch(setupBusinessStore(app));
 app.setBusinessActions(businessActions);
+app.addForm(RegistrationForm);
 app.setUiDispatch(setupUiStore(app));
 app.setUiActions(uiActions);
 var placeholderComms = new OffsideAppContainer.CommsChannel("placeholder", "http://jsonplaceholder.typicode.com", {}, function (req) {

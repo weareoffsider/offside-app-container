@@ -1,5 +1,11 @@
 import Localize, {LocalizeContext} from './AppContainer/Localize'
 import CommsChannel, {CommsChannelState} from './Comms/CommsChannel'
+import FormDefinition, {
+  FormStepDefinition, FormFieldDefinition
+} from './Forms/FormDefinition'
+
+import {FormState} from './Forms/FormData'
+import FormManager from './Forms/FormManager'
 import {AppState, AppActions, AppActor} from './AppContainer/DataModel'
 import UIContext from './UIEngine/UIContext'
 
@@ -14,20 +20,29 @@ export default class OffsideAppContainer<
   public commsChannels: {[key: string]: CommsChannel<any>}
   public appState: AppState<BusinessData, UIData>
   public chromeState: UIChromeData
+  public formManager: FormManager<BusinessData, UIData>
   public appActions: AppActions<BusinessData, UIData>
   public appActor: AppActor<BusinessData, UIData, BusinessAction, UIAction>
 
   constructor () {
     this.uiContexts = {}
     this.commsChannels = {}
+    this.formManager = new FormManager<BusinessData, UIData>()
+    this.formManager.setStateGetter(this.getState.bind(this))
+    this.formManager.setStateUpdater(this.updateAppState.bind(this, "forms"))
 
     this.appActor = new AppActor<BusinessData, UIData, BusinessAction, UIAction>()
-    this.appActor.setStateGetter = this.getState.bind(this)
+    this.appActor.setStateGetter(this.getState.bind(this))
     this.appActions = {
       ui: {},
       business: {},
+      forms: this.formManager.actions(),
       comms: {},
     }
+  }
+
+  addForm (form: FormDefinition) {
+    this.formManager.addForm(form)
   }
 
   setBusinessDispatch(func: (a: BusinessAction) => void) {
@@ -95,13 +110,14 @@ export default class OffsideAppContainer<
     const l10n = this.localizeSpawner.loadLocale(lang)
     const route = this.activeUI.getMatchFromRoute(window.location.pathname)
     const comms: {[key: string]: CommsChannelState} = {}
+    const forms: {[key: string]: FormState} = {}
 
     Object.keys(this.commsChannels).forEach((name) => {
       comms[name] = this.commsChannels[name].getState()
     })
 
     const routes = this.activeUI.routeTable
-    this.appState = {l10n, uiData, businessData, route, routes, comms}
+    this.appState = {l10n, uiData, businessData, forms, route, routes, comms}
     this.chromeState = chromeData
   }
 
@@ -134,6 +150,7 @@ export default class OffsideAppContainer<
       l10n: this.appState.l10n,
       route: this.appState.route,
       routes: this.appState.routes,
+      forms: this.appState.forms,
       comms: this.appState.comms,
       uiData: this.appState.uiData,
       businessData: this.appState.businessData,
@@ -146,6 +163,7 @@ export default class OffsideAppContainer<
 
     if (key === "route") { nextState.route = updateValue }
     if (key === "comms") { nextState.comms = updateValue }
+    if (key === "forms") { nextState.forms = updateValue }
     if (key === "uiData") { nextState.uiData = updateValue }
     if (key === "businessData") { nextState.businessData = updateValue }
 
@@ -192,4 +210,7 @@ export {
   AppState,
   AppActions,
   AppActor,
+  FormDefinition,
+  FormStepDefinition,
+  FormFieldDefinition,
 }

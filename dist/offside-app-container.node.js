@@ -6,6 +6,7 @@ function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'defau
 
 var i18next = require('i18next');
 var moment = require('moment');
+var lodash = require('lodash');
 var Route = _interopDefault(require('route-parser'));
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) {
@@ -346,6 +347,146 @@ var CommsChannel = function () {
         }
     }]);
     return CommsChannel;
+}();
+
+var FormDefinition = function () {
+    function FormDefinition(name) {
+        classCallCheck(this, FormDefinition);
+
+        this.name = name;
+        this.steps = {};
+        this.stepOrder = [];
+    }
+
+    createClass(FormDefinition, [{
+        key: "addStep",
+        value: function addStep(stepName, step) {
+            this.steps[stepName] = step;
+            this.stepOrder.push(stepName);
+        }
+    }, {
+        key: "getInitState",
+        value: function getInitState(formType, formKey) {
+            var _this = this;
+
+            var steps = {};
+            this.stepOrder.forEach(function (stepKey) {
+                steps[stepKey] = _this.steps[stepKey].getInitState();
+            });
+            return {
+                formType: formType,
+                formKey: formKey,
+                steps: steps
+            };
+        }
+    }]);
+    return FormDefinition;
+}();
+
+var FormStepDefinition = function () {
+    function FormStepDefinition(name) {
+        classCallCheck(this, FormStepDefinition);
+
+        this.name = name;
+        this.fields = {};
+        this.fieldOrder = [];
+    }
+
+    createClass(FormStepDefinition, [{
+        key: "addField",
+        value: function addField(fieldName, field) {
+            this.fields[fieldName] = field;
+            this.fieldOrder.push(fieldName);
+        }
+    }, {
+        key: "getInitState",
+        value: function getInitState() {
+            var stepState = {
+                data: {},
+                errors: {}
+            };
+            this.fieldOrder.forEach(function (fieldKey) {
+                stepState.data[fieldKey] = undefined;
+                stepState.errors[fieldKey] = [];
+            });
+            return stepState;
+        }
+    }]);
+    return FormStepDefinition;
+}();
+var FormFieldDefinition = function FormFieldDefinition(fieldType) {
+    classCallCheck(this, FormFieldDefinition);
+
+    this.fieldType = fieldType;
+};
+
+var FormManager = function () {
+    function FormManager() {
+        classCallCheck(this, FormManager);
+
+        this.formRegistry = {};
+    }
+
+    createClass(FormManager, [{
+        key: "setStateGetter",
+        value: function setStateGetter(func) {
+            this.getAppState = func;
+        }
+    }, {
+        key: "setStateUpdater",
+        value: function setStateUpdater(func) {
+            this.updateFormState = func;
+        }
+    }, {
+        key: "addForm",
+        value: function addForm(form) {
+            this.formRegistry[form.name] = form;
+        }
+    }, {
+        key: "readyNewState",
+        value: function readyNewState() {
+            var _getAppState = this.getAppState();
+
+            var forms = _getAppState.forms;
+
+            var newForms = {};
+            Object.keys(forms).forEach(function (key) {
+                newForms[key] = forms[key];
+            });
+            return newForms;
+        }
+    }, {
+        key: "init",
+        value: function init(formType, formKey) {
+            var form = this.formRegistry[formType];
+            var newForms = this.readyNewState();
+            if (!form) {
+                throw new Error("Form named '" + formType + "' was not found.");
+            }
+            var key = formKey || formType;
+            newForms[key] = form.getInitState(formType, key);
+            this.updateFormState(newForms);
+        }
+    }, {
+        key: "updateField",
+        value: function updateField(formKey, stepKey, fieldKey, value) {
+            var newForms = this.readyNewState();
+            var formState = lodash.cloneDeep(newForms[formKey]);
+            var form = this.formRegistry[formState.formType];
+            formState.steps[stepKey].data[fieldKey] = value;
+            newForms[formKey] = formState;
+            this.updateFormState(newForms);
+        }
+    }, {
+        key: "actions",
+        value: function actions() {
+            return {
+                init: this.init.bind(this),
+                updateField: this.updateField.bind(this)
+            };
+        }
+    }]);
+    return FormManager;
 }();
 
 var AppActor = function () {
@@ -757,16 +898,25 @@ var OffsideAppContainer = function () {
 
         this.uiContexts = {};
         this.commsChannels = {};
+        this.formManager = new FormManager();
+        this.formManager.setStateGetter(this.getState.bind(this));
+        this.formManager.setStateUpdater(this.updateAppState.bind(this, "forms"));
         this.appActor = new AppActor();
-        this.appActor.setStateGetter = this.getState.bind(this);
+        this.appActor.setStateGetter(this.getState.bind(this));
         this.appActions = {
             ui: {},
             business: {},
+            forms: this.formManager.actions(),
             comms: {}
         };
     }
 
     createClass(OffsideAppContainer, [{
+        key: 'addForm',
+        value: function addForm(form) {
+            this.formManager.addForm(form);
+        }
+    }, {
         key: 'setBusinessDispatch',
         value: function setBusinessDispatch(func) {
             this.appActor.setBusinessDispatch(func);
@@ -843,11 +993,12 @@ var OffsideAppContainer = function () {
             var l10n = this.localizeSpawner.loadLocale(lang);
             var route = this.activeUI.getMatchFromRoute(window.location.pathname);
             var comms = {};
+            var forms = {};
             Object.keys(this.commsChannels).forEach(function (name) {
                 comms[name] = _this2.commsChannels[name].getState();
             });
             var routes = this.activeUI.routeTable;
-            this.appState = { l10n: l10n, uiData: uiData, businessData: businessData, route: route, routes: routes, comms: comms };
+            this.appState = { l10n: l10n, uiData: uiData, businessData: businessData, forms: forms, route: route, routes: routes, comms: comms };
             this.chromeState = chromeData;
         }
     }, {
@@ -881,6 +1032,7 @@ var OffsideAppContainer = function () {
                 l10n: this.appState.l10n,
                 route: this.appState.route,
                 routes: this.appState.routes,
+                forms: this.appState.forms,
                 comms: this.appState.comms,
                 uiData: this.appState.uiData,
                 businessData: this.appState.businessData
@@ -894,6 +1046,9 @@ var OffsideAppContainer = function () {
             }
             if (key === "comms") {
                 nextState.comms = updateValue;
+            }
+            if (key === "forms") {
+                nextState.forms = updateValue;
             }
             if (key === "uiData") {
                 nextState.uiData = updateValue;
@@ -946,3 +1101,6 @@ exports.UIContext = UIContext;
 exports.CommsChannel = CommsChannel;
 exports.Localize = LocalizeSpawner;
 exports.AppActor = AppActor;
+exports.FormDefinition = FormDefinition;
+exports.FormStepDefinition = FormStepDefinition;
+exports.FormFieldDefinition = FormFieldDefinition;

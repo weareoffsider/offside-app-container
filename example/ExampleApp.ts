@@ -5,7 +5,7 @@ import Header from "./chrome/Header"
 import Footer from "./chrome/Footer"
 import HomePage from "./views/HomePage"
 import AboutPage from "./views/AboutPage"
-import RegistrationPage from "./views/RegistrationPage"
+import RegistrationPage, {RegistrationForm} from "./views/RegistrationPage"
 import NotFoundPage from "./views/NotFoundPage"
 import OfflinePage from "./views/OfflinePage"
 import Always404Page from "./views/Always404Page"
@@ -21,6 +21,8 @@ const container = document.getElementById("app-container")
 
 app.setBusinessDispatch(setupBusinessStore(app))
 app.setBusinessActions(businessActions)
+
+app.addForm(RegistrationForm)
 
 app.setUiDispatch(setupUiStore(app))
 app.setUiActions(uiActions)

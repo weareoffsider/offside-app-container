@@ -1,11 +1,13 @@
 import Localize, {LocalizeContext} from './Localize';
 import {CommsActions, CommsChannelState} from "../Comms/CommsChannel"
 import RouteTable, {RouteMatcher} from '../UIEngine/RouteTable'
+import {FormState} from '../Forms/FormData'
 
 export interface AppState<BusinessData, UIData> {
   l10n: LocalizeContext
   route?: RouteMatcher
   comms: {[key: string]: CommsChannelState}
+  forms: {[key: string]: FormState}
   routes: RouteTable
   uiData: UIData
   businessData: BusinessData

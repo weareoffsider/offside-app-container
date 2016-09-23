@@ -7,6 +7,10 @@
     "connection": "Connection",
     "always404": "Always 404",
     "about": "About",
+    "registration": "Registration",
+    "email": "E-Mail",
+    "username": "Username",
+    "password": "Password",
     "footer": "Footer Text"
   }
 }

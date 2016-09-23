@@ -101,15 +101,36 @@ declare module "UIEngine/RouteTable" {
         reverse(params?: any): string;
     }
 }
+declare module "Forms/FormData" {
+    export interface FormStepState {
+        data: {
+            [key: string]: any;
+        };
+        errors: {
+            [key: string]: Array<string>;
+        };
+    }
+    export interface FormState {
+        formType: string;
+        formKey: string;
+        steps: {
+            [key: string]: FormStepState;
+        };
+    }
+}
 declare module "AppContainer/DataModel" {
     import { LocalizeContext } from "AppContainer/Localize";
     import { CommsActions, CommsChannelState } from "Comms/CommsChannel";
     import RouteTable, { RouteMatcher } from "UIEngine/RouteTable";
+    import { FormState } from "Forms/FormData";
     export interface AppState<BusinessData, UIData> {
         l10n: LocalizeContext;
         route?: RouteMatcher;
         comms: {
             [key: string]: CommsChannelState;
+        };
+        forms: {
+            [key: string]: FormState;
         };
         routes: RouteTable;
         uiData: UIData;
@@ -137,10 +158,54 @@ declare module "AppContainer/DataModel" {
     }
 }
 declare module "Forms/FormDefinition" {
+    import { FormState, FormStepState } from "Forms/FormData";
     export default class FormDefinition {
-        name: string;
-        private steps;
+        readonly name: string;
+        readonly steps: {
+            [key: string]: FormStepDefinition;
+        };
+        readonly stepOrder: Array<string>;
         constructor(name: string);
+        addStep(stepName: string, step: FormStepDefinition): void;
+        getInitState(formType: string, formKey: string): FormState;
+    }
+    export class FormStepDefinition {
+        readonly name: string;
+        readonly fields: {
+            [key: string]: FormFieldDefinition;
+        };
+        readonly fieldOrder: Array<string>;
+        constructor(name: string);
+        addField(fieldName: string, field: FormFieldDefinition): void;
+        getInitState(): FormStepState;
+    }
+    export class FormFieldDefinition {
+        fieldType: string;
+        constructor(fieldType: string);
+    }
+}
+declare module "Forms/FormManager" {
+    import { FormState } from "Forms/FormData";
+    import FormDefinition from "Forms/FormDefinition";
+    import { AppState } from "AppContainer/DataModel";
+    export interface FormActions {
+        init: (formType: string, formKey?: string) => void;
+        updateField: (formKey: string, stepKey: string, fieldKey: string, value: any) => void;
+    }
+    export default class FormManager<BusinessData, UIData> {
+        private formRegistry;
+        getAppState: () => AppState<BusinessData, UIData>;
+        updateFormState: (newForm: any) => void;
+        constructor();
+        setStateGetter(func: () => AppState<BusinessData, UIData>): void;
+        setStateUpdater(func: (newForm: any) => void): void;
+        addForm(form: FormDefinition): void;
+        readyNewState(): {
+            [key: string]: FormState;
+        };
+        init(formType: string, formKey?: string): void;
+        updateField(formKey: string, stepKey: string, fieldKey: string, value: any): void;
+        actions(): FormActions;
     }
 }
 declare module "UIEngine/Chrome" {
@@ -232,6 +297,8 @@ declare module "UIEngine/UIContext" {
 declare module "offside-app-container" {
     import Localize from "AppContainer/Localize";
     import CommsChannel, { CommsChannelState } from "Comms/CommsChannel";
+    import FormDefinition, { FormStepDefinition, FormFieldDefinition } from "Forms/FormDefinition";
+    import FormManager from "Forms/FormManager";
     import { AppState, AppActions, AppActor } from "AppContainer/DataModel";
     import UIContext from "UIEngine/UIContext";
     export default class OffsideAppContainer<BusinessData, UIData, UIChromeData, BusinessAction, UIAction> {
@@ -245,9 +312,11 @@ declare module "offside-app-container" {
         };
         appState: AppState<BusinessData, UIData>;
         chromeState: UIChromeData;
+        formManager: FormManager<BusinessData, UIData>;
         appActions: AppActions<BusinessData, UIData>;
         appActor: AppActor<BusinessData, UIData, BusinessAction, UIAction>;
         constructor();
+        addForm(form: FormDefinition): void;
         setBusinessDispatch(func: (a: BusinessAction) => void): void;
         bindActor(leaf: any): any;
         setBusinessActions(actionObject: any): void;
@@ -264,5 +333,5 @@ declare module "offside-app-container" {
         updateAppState(key: string, updateValue: any): void;
         setupRouteListeners(): void;
     }
-    export { UIContext, CommsChannel, Localize, AppState, AppActions, AppActor };
+    export { UIContext, CommsChannel, Localize, AppState, AppActions, AppActor, FormDefinition, FormStepDefinition, FormFieldDefinition };
 }

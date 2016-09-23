@@ -27,7 +27,7 @@
     "gulp-using": "^0.1.1",
     "gulp-watch": "^4.3.9",
     "json-loader": "^0.5.4",
-    "lodash": "^4.15.0",
+    "lodash": "^4.16.1",
     "merge-stream": "^1.0.0",
     "merge2": "^1.0.2",
     "react": "^15.3.1",
