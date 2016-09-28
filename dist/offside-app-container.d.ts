@@ -109,6 +109,9 @@ declare module "Forms/FormData" {
         errors: {
             [key: string]: Array<string>;
         };
+        warnings: {
+            [key: string]: Array<string>;
+        };
     }
     export interface FormState {
         formType: string;
@@ -157,54 +160,83 @@ declare module "AppContainer/DataModel" {
         dispatch: (action: BusinessAction) => void;
     }
 }
+declare module "Forms/FormValidators" {
+    import { AppState, AppActor } from "AppContainer/DataModel";
+    export class FormError extends Error {
+        readonly message: string;
+        name: string;
+        constructor(message: string);
+    }
+    export class FormWarning extends Error {
+        readonly message: string;
+        name: string;
+        constructor(message: string);
+    }
+    export function fieldRequired<BusinessData, UIData, BusinessAction, UIAction>(value: any, appState: AppState<BusinessData, UIData>, appActions: AppActor<BusinessData, UIData, BusinessAction, UIAction>): Promise<boolean>;
+}
 declare module "Forms/FormDefinition" {
     import { FormState, FormStepState } from "Forms/FormData";
-    export default class FormDefinition {
+    import { AppState, AppActor } from "AppContainer/DataModel";
+    export default class FormDefinition<BusinessData, UIData, BusinessAction, UIAction> {
         readonly name: string;
         readonly steps: {
-            [key: string]: FormStepDefinition;
+            [key: string]: FormStepDefinition<BusinessData, UIData, BusinessAction, UIAction>;
         };
         readonly stepOrder: Array<string>;
         constructor(name: string);
-        addStep(stepName: string, step: FormStepDefinition): void;
+        addStep(stepName: string, step: FormStepDefinition<BusinessData, UIData, BusinessAction, UIAction>): void;
         getInitState(formType: string, formKey: string): FormState;
     }
-    export class FormStepDefinition {
+    export class FormStepDefinition<BusinessData, UIData, BusinessAction, UIAction> {
         readonly name: string;
         readonly fields: {
-            [key: string]: FormFieldDefinition;
+            [key: string]: FormFieldDefinition<BusinessData, UIData, BusinessAction, UIAction>;
         };
         readonly fieldOrder: Array<string>;
         constructor(name: string);
-        addField(fieldName: string, field: FormFieldDefinition): void;
+        addField(fieldName: string, field: FormFieldDefinition<BusinessData, UIData, BusinessAction, UIAction>): void;
         getInitState(): FormStepState;
     }
-    export class FormFieldDefinition {
-        fieldType: string;
-        constructor(fieldType: string);
+    export enum FormValidationStyle {
+        WhileEditing = 0,
+        OnBlur = 1,
+        OnStepEnd = 2,
+    }
+    export class FormFieldDefinition<BusinessData, UIData, BusinessAction, UIAction> {
+        readonly fieldType: string;
+        readonly required: boolean;
+        readonly validationStyle: FormValidationStyle;
+        readonly validators: Array<(value: any, appState: AppState<BusinessData, UIData>, appActions: AppActor<BusinessData, UIData, BusinessAction, UIAction>) => Promise<boolean>>;
+        constructor(fieldType: string, required?: boolean, validationStyle?: FormValidationStyle);
     }
 }
 declare module "Forms/FormManager" {
     import { FormState } from "Forms/FormData";
     import FormDefinition from "Forms/FormDefinition";
-    import { AppState } from "AppContainer/DataModel";
+    import { AppState, AppActor } from "AppContainer/DataModel";
     export interface FormActions {
         init: (formType: string, formKey?: string) => void;
         updateField: (formKey: string, stepKey: string, fieldKey: string, value: any) => void;
+        blurField: (formKey: string, stepKey: string, fieldKey: string) => void;
+        validateField: (formKey: string, stepKey: string, fieldKey: string) => Promise<boolean>;
     }
-    export default class FormManager<BusinessData, UIData> {
+    export default class FormManager<BusinessData, UIData, BusinessAction, UIAction> {
         private formRegistry;
         getAppState: () => AppState<BusinessData, UIData>;
+        getAppActor: () => AppActor<BusinessData, UIData, BusinessAction, UIAction>;
         updateFormState: (newForm: any) => void;
         constructor();
         setStateGetter(func: () => AppState<BusinessData, UIData>): void;
+        setActorGetter(func: () => AppActor<BusinessData, UIData, BusinessAction, UIAction>): void;
         setStateUpdater(func: (newForm: any) => void): void;
-        addForm(form: FormDefinition): void;
+        addForm(form: FormDefinition<BusinessData, UIData, BusinessAction, UIAction>): void;
         readyNewState(): {
             [key: string]: FormState;
         };
         init(formType: string, formKey?: string): void;
         updateField(formKey: string, stepKey: string, fieldKey: string, value: any): void;
+        blurField(formKey: string, stepKey: string, fieldKey: string): void;
+        validateField(formKey: string, stepKey: string, fieldKey: string): Promise<boolean>;
         actions(): FormActions;
     }
 }
@@ -297,7 +329,7 @@ declare module "UIEngine/UIContext" {
 declare module "offside-app-container" {
     import Localize from "AppContainer/Localize";
     import CommsChannel, { CommsChannelState } from "Comms/CommsChannel";
-    import FormDefinition, { FormStepDefinition, FormFieldDefinition } from "Forms/FormDefinition";
+    import FormDefinition, { FormStepDefinition, FormFieldDefinition, FormValidationStyle } from "Forms/FormDefinition";
     import FormManager from "Forms/FormManager";
     import { AppState, AppActions, AppActor } from "AppContainer/DataModel";
     import UIContext from "UIEngine/UIContext";
@@ -312,11 +344,11 @@ declare module "offside-app-container" {
         };
         appState: AppState<BusinessData, UIData>;
         chromeState: UIChromeData;
-        formManager: FormManager<BusinessData, UIData>;
+        formManager: FormManager<BusinessData, UIData, BusinessAction, UIAction>;
         appActions: AppActions<BusinessData, UIData>;
         appActor: AppActor<BusinessData, UIData, BusinessAction, UIAction>;
         constructor();
-        addForm(form: FormDefinition): void;
+        addForm(form: FormDefinition<BusinessData, UIData, BusinessAction, UIAction>): void;
         setBusinessDispatch(func: (a: BusinessAction) => void): void;
         bindActor(leaf: any): any;
         setBusinessActions(actionObject: any): void;
@@ -328,10 +360,11 @@ declare module "offside-app-container" {
         loadUIContext(contextName: string): void;
         initializeAppState(lang: string, businessData: BusinessData, uiData: UIData, chromeData: UIChromeData): void;
         getState(): AppState<BusinessData, UIData>;
+        getActor(): AppActor<BusinessData, UIData, BusinessAction, UIAction>;
         initializeUI(container: Element): void;
         updateCommsState(key: string, state: CommsChannelState): void;
         updateAppState(key: string, updateValue: any): void;
         setupRouteListeners(): void;
     }
-    export { UIContext, CommsChannel, Localize, AppState, AppActions, AppActor, FormDefinition, FormStepDefinition, FormFieldDefinition };
+    export { UIContext, CommsChannel, Localize, AppState, AppActions, AppActor, FormDefinition, FormStepDefinition, FormFieldDefinition, FormValidationStyle };
 }

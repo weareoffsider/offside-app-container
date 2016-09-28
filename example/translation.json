@@ -11,6 +11,9 @@
     "email": "E-Mail",
     "username": "Username",
     "password": "Password",
+    "form_validation": {
+      "field_required": "This field is required"
+    },
     "footer": "Footer Text"
   }
 }

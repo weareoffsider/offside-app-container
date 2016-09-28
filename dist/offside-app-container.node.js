@@ -349,6 +349,46 @@ var CommsChannel = function () {
     return CommsChannel;
 }();
 
+var FormError = function (_Error) {
+    inherits(FormError, _Error);
+
+    function FormError(message) {
+        classCallCheck(this, FormError);
+
+        var _this = possibleConstructorReturn(this, (FormError.__proto__ || Object.getPrototypeOf(FormError)).call(this, message));
+
+        _this.message = message;
+        _this.name = "FormError";
+        return _this;
+    }
+
+    return FormError;
+}(Error);
+var FormWarning = function (_Error2) {
+    inherits(FormWarning, _Error2);
+
+    function FormWarning(message) {
+        classCallCheck(this, FormWarning);
+
+        var _this2 = possibleConstructorReturn(this, (FormWarning.__proto__ || Object.getPrototypeOf(FormWarning)).call(this, message));
+
+        _this2.message = message;
+        _this2.name = "FormWarning";
+        return _this2;
+    }
+
+    return FormWarning;
+}(Error);
+function fieldRequired(value, appState, appActions) {
+    var l10n = appState.l10n;
+    var translate = l10n.translate;
+
+    if (value === null || value === undefined || value === "") {
+        return Promise.reject(new FormError(translate('form_validation.field_required')));
+    }
+    return Promise.resolve(true);
+}
+
 var FormDefinition = function () {
     function FormDefinition(name) {
         classCallCheck(this, FormDefinition);
@@ -403,21 +443,36 @@ var FormStepDefinition = function () {
         value: function getInitState() {
             var stepState = {
                 data: {},
-                errors: {}
+                errors: {},
+                warnings: {}
             };
             this.fieldOrder.forEach(function (fieldKey) {
                 stepState.data[fieldKey] = undefined;
                 stepState.errors[fieldKey] = [];
+                stepState.warnings[fieldKey] = [];
             });
             return stepState;
         }
     }]);
     return FormStepDefinition;
 }();
+(function (FormValidationStyle) {
+    FormValidationStyle[FormValidationStyle["WhileEditing"] = 0] = "WhileEditing";
+    FormValidationStyle[FormValidationStyle["OnBlur"] = 1] = "OnBlur";
+    FormValidationStyle[FormValidationStyle["OnStepEnd"] = 2] = "OnStepEnd";
+})(exports.FormValidationStyle || (exports.FormValidationStyle = {}));
 var FormFieldDefinition = function FormFieldDefinition(fieldType) {
+    var required = arguments.length <= 1 || arguments[1] === undefined ? true : arguments[1];
+    var validationStyle = arguments.length <= 2 || arguments[2] === undefined ? exports.FormValidationStyle.OnStepEnd : arguments[2];
     classCallCheck(this, FormFieldDefinition);
 
     this.fieldType = fieldType;
+    this.required = required;
+    this.validationStyle = validationStyle;
+    this.validators = [];
+    if (required) {
+        this.validators.push(fieldRequired);
+    }
 };
 
 var FormManager = function () {
@@ -431,6 +486,11 @@ var FormManager = function () {
         key: "setStateGetter",
         value: function setStateGetter(func) {
             this.getAppState = func;
+        }
+    }, {
+        key: "setActorGetter",
+        value: function setActorGetter(func) {
+            this.getAppActor = func;
         }
     }, {
         key: "setStateUpdater",
@@ -473,16 +533,69 @@ var FormManager = function () {
             var newForms = this.readyNewState();
             var formState = lodash.cloneDeep(newForms[formKey]);
             var form = this.formRegistry[formState.formType];
+            var field = form.steps[stepKey].fields[fieldKey];
             formState.steps[stepKey].data[fieldKey] = value;
             newForms[formKey] = formState;
             this.updateFormState(newForms);
+            if (field.validationStyle === exports.FormValidationStyle.WhileEditing) {
+                this.validateField(formKey, stepKey, fieldKey);
+            }
+        }
+    }, {
+        key: "blurField",
+        value: function blurField(formKey, stepKey, fieldKey) {
+            var newForms = this.readyNewState();
+            var formState = lodash.cloneDeep(newForms[formKey]);
+            var form = this.formRegistry[formState.formType];
+            var field = form.steps[stepKey].fields[fieldKey];
+            if (field.validationStyle === exports.FormValidationStyle.OnBlur || field.validationStyle === exports.FormValidationStyle.WhileEditing) {
+                this.validateField(formKey, stepKey, fieldKey);
+            }
+        }
+    }, {
+        key: "validateField",
+        value: function validateField(formKey, stepKey, fieldKey) {
+            var _this = this;
+
+            var startState = this.readyNewState()[formKey];
+            var form = this.formRegistry[startState.formType];
+            var field = form.steps[stepKey].fields[fieldKey];
+            var value = startState.steps[stepKey].data[fieldKey];
+            var appState = this.getAppState();
+            var appActor = this.getAppActor();
+            console.log("FormManager :: validating " + formKey + "." + stepKey + "." + fieldKey + ":", value);
+            return Promise.all(field.validators.map(function (validator) {
+                return validator(value, appState, appActor);
+            })).then(function (results) {
+                var newForms = _this.readyNewState();
+                var formState = lodash.cloneDeep(newForms[formKey]);
+                formState.steps[stepKey].errors[fieldKey] = [];
+                formState.steps[stepKey].warnings[fieldKey] = [];
+                newForms[formKey] = formState;
+                _this.updateFormState(newForms);
+                return true;
+            }, function (error) {
+                var newForms = _this.readyNewState();
+                var formState = lodash.cloneDeep(newForms[formKey]);
+                if (error.name === "FormError") {
+                    formState.steps[stepKey].errors[fieldKey] = [error.message];
+                    newForms[formKey] = formState;
+                } else if (error.name === "FormWarning") {
+                    formState.steps[stepKey].warnings[fieldKey] = [error.message];
+                    newForms[formKey] = formState;
+                }
+                _this.updateFormState(newForms);
+                return error;
+            });
         }
     }, {
         key: "actions",
         value: function actions() {
             return {
                 init: this.init.bind(this),
-                updateField: this.updateField.bind(this)
+                updateField: this.updateField.bind(this),
+                blurField: this.blurField.bind(this),
+                validateField: this.validateField.bind(this)
             };
         }
     }]);
@@ -900,6 +1013,7 @@ var OffsideAppContainer = function () {
         this.commsChannels = {};
         this.formManager = new FormManager();
         this.formManager.setStateGetter(this.getState.bind(this));
+        this.formManager.setActorGetter(this.getActor.bind(this));
         this.formManager.setStateUpdater(this.updateAppState.bind(this, "forms"));
         this.appActor = new AppActor();
         this.appActor.setStateGetter(this.getState.bind(this));
@@ -1005,6 +1119,11 @@ var OffsideAppContainer = function () {
         key: 'getState',
         value: function getState() {
             return this.appState;
+        }
+    }, {
+        key: 'getActor',
+        value: function getActor() {
+            return this.appActor;
         }
     }, {
         key: 'initializeUI',

@@ -1,6 +1,7 @@
 export interface FormStepState {
   data: {[key: string]: any}
   errors: {[key: string]: Array<string>}
+  warnings: {[key: string]: Array<string>}
 }
 
 

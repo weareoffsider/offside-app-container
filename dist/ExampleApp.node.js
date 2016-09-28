@@ -171,6 +171,7 @@ var RegistrationPage = function (_React$Component) {
         var _this = possibleConstructorReturn(this, (RegistrationPage.__proto__ || Object.getPrototypeOf(RegistrationPage)).call(this, props, context));
 
         _this.updateField = _this.updateField.bind(_this);
+        _this.blurField = _this.blurField.bind(_this);
         return _this;
     }
 
@@ -180,6 +181,13 @@ var RegistrationPage = function (_React$Component) {
             var actions = this.props.actions;
 
             actions.forms.updateField(FORM_KEY, STEP_KEY, e.target.name, e.target.value);
+        }
+    }, {
+        key: "blurField",
+        value: function blurField(e) {
+            var actions = this.props.actions;
+
+            actions.forms.blurField(FORM_KEY, STEP_KEY, e.target.name);
         }
     }, {
         key: "render",
@@ -193,8 +201,10 @@ var RegistrationPage = function (_React$Component) {
 
             var formData = forms[FORM_KEY].steps[STEP_KEY].data;
             var errorData = forms[FORM_KEY].steps[STEP_KEY].errors;
+            var warnData = forms[FORM_KEY].steps[STEP_KEY].warnings;
             var t_ = l10n.translate;
-            return React.createElement("section", { className: "HomePage" }, React.createElement("h1", null, t_('registration')), React.createElement("label", { htmlFor: "username" }, t_("username"), " ", React.createElement("br", null), React.createElement("input", { onChange: this.updateField, id: "username", name: "username", value: formData.username })), React.createElement("br", null), React.createElement("br", null), React.createElement("label", { htmlFor: "email" }, t_("email"), " ", React.createElement("br", null), React.createElement("input", { onChange: this.updateField, id: "email", type: "email", name: "email", value: formData.email })), React.createElement("br", null), React.createElement("br", null), React.createElement("label", { htmlFor: "password" }, t_("password"), " ", React.createElement("br", null), React.createElement("input", { onChange: this.updateField, id: "password", type: "password", name: "password", value: formData.password })));
+            console.log(errorData);
+            return React.createElement("section", { className: "HomePage" }, React.createElement("h1", null, t_('registration')), React.createElement("label", { htmlFor: "username" }, t_("username"), " ", React.createElement("br", null), React.createElement("input", { onChange: this.updateField, onBlur: this.blurField, id: "username", name: "username", value: formData.username }), errorData.username.length > 0 && React.createElement("p", { className: "error" }, errorData.username.join(' '))), React.createElement("br", null), React.createElement("br", null), React.createElement("label", { htmlFor: "email" }, t_("email"), " ", React.createElement("br", null), React.createElement("input", { onChange: this.updateField, onBlur: this.blurField, id: "email", type: "email", name: "email", value: formData.email }), errorData.email.length > 0 && React.createElement("p", { className: "error" }, errorData.email.join(' '))), React.createElement("br", null), React.createElement("br", null), React.createElement("label", { htmlFor: "password" }, t_("password"), " ", React.createElement("br", null), React.createElement("input", { onChange: this.updateField, onBlur: this.blurField, id: "password", type: "password", name: "password", value: formData.password }), errorData.password.length > 0 && React.createElement("p", { className: "error" }, errorData.password.join(' '))));
         }
     }], [{
         key: "preLoad",
@@ -209,9 +219,9 @@ var RegistrationPage = function (_React$Component) {
 var RegistrationForm = new OffsideAppContainer.FormDefinition("registration");
 var registrationStep = new OffsideAppContainer.FormStepDefinition(STEP_KEY);
 RegistrationForm.addStep(STEP_KEY, registrationStep);
-registrationStep.addField("username", new OffsideAppContainer.FormFieldDefinition("text"));
-registrationStep.addField("email", new OffsideAppContainer.FormFieldDefinition("email"));
-registrationStep.addField("password", new OffsideAppContainer.FormFieldDefinition("password"));
+registrationStep.addField("username", new OffsideAppContainer.FormFieldDefinition("text", true, OffsideAppContainer.FormValidationStyle.OnBlur));
+registrationStep.addField("email", new OffsideAppContainer.FormFieldDefinition("email", true, OffsideAppContainer.FormValidationStyle.WhileEditing));
+registrationStep.addField("password", new OffsideAppContainer.FormFieldDefinition("password", true, OffsideAppContainer.FormValidationStyle.WhileEditing));
 
 var NotFoundPage = function (_React$Component) {
     inherits(NotFoundPage, _React$Component);

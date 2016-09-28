@@ -1,7 +1,7 @@
 import Localize, {LocalizeContext} from './AppContainer/Localize'
 import CommsChannel, {CommsChannelState} from './Comms/CommsChannel'
 import FormDefinition, {
-  FormStepDefinition, FormFieldDefinition
+  FormStepDefinition, FormFieldDefinition, FormValidationStyle,
 } from './Forms/FormDefinition'
 
 import {FormState} from './Forms/FormData'
@@ -20,15 +20,16 @@ export default class OffsideAppContainer<
   public commsChannels: {[key: string]: CommsChannel<any>}
   public appState: AppState<BusinessData, UIData>
   public chromeState: UIChromeData
-  public formManager: FormManager<BusinessData, UIData>
+  public formManager: FormManager<BusinessData, UIData, BusinessAction, UIAction>
   public appActions: AppActions<BusinessData, UIData>
   public appActor: AppActor<BusinessData, UIData, BusinessAction, UIAction>
 
   constructor () {
     this.uiContexts = {}
     this.commsChannels = {}
-    this.formManager = new FormManager<BusinessData, UIData>()
+    this.formManager = new FormManager<BusinessData, UIData, BusinessAction, UIAction>()
     this.formManager.setStateGetter(this.getState.bind(this))
+    this.formManager.setActorGetter(this.getActor.bind(this))
     this.formManager.setStateUpdater(this.updateAppState.bind(this, "forms"))
 
     this.appActor = new AppActor<BusinessData, UIData, BusinessAction, UIAction>()
@@ -41,7 +42,9 @@ export default class OffsideAppContainer<
     }
   }
 
-  addForm (form: FormDefinition) {
+  addForm (form: FormDefinition<
+    BusinessData, UIData, BusinessAction, UIAction
+  >) {
     this.formManager.addForm(form)
   }
 
@@ -123,6 +126,10 @@ export default class OffsideAppContainer<
 
   getState () {
     return this.appState
+  }
+
+  getActor () {
+    return this.appActor
   }
 
   initializeUI (container: Element) {
@@ -213,4 +220,5 @@ export {
   FormDefinition,
   FormStepDefinition,
   FormFieldDefinition,
+  FormValidationStyle,
 }
