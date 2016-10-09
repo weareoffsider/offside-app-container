@@ -173,6 +173,7 @@ declare module "Forms/FormValidators" {
         constructor(message: string);
     }
     export function fieldRequired<BusinessData, UIData, BusinessAction, UIAction>(value: any, appState: AppState<BusinessData, UIData>, appActions: AppActor<BusinessData, UIData, BusinessAction, UIAction>): Promise<boolean>;
+    export function emailValidate<BusinessData, UIData, BusinessAction, UIAction>(value: any, appState: AppState<BusinessData, UIData>, appActions: AppActor<BusinessData, UIData, BusinessAction, UIAction>): Promise<boolean>;
 }
 declare module "Forms/FormDefinition" {
     import { FormState, FormStepState } from "Forms/FormData";

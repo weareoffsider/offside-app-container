@@ -388,6 +388,20 @@ function fieldRequired(value, appState, appActions) {
     }
     return Promise.resolve(true);
 }
+function emailValidate(value, appState, appActions) {
+    var l10n = appState.l10n;
+    var translate = l10n.translate;
+
+    if (!value) {
+        return Promise.resolve(true);
+    }
+    var hasAt = value.indexOf('@') > 0;
+    var hasDot = hasAt ? value.split('@')[1].indexOf('.') > 0 : false;
+    if (!hasAt || !hasDot) {
+        return Promise.reject(new FormError(translate('form_validation.invalid_email')));
+    }
+    return Promise.resolve(true);
+}
 
 var FormDefinition = function () {
     function FormDefinition(name) {
@@ -472,6 +486,9 @@ var FormFieldDefinition = function FormFieldDefinition(fieldType) {
     this.validators = [];
     if (required) {
         this.validators.push(fieldRequired);
+    }
+    if (fieldType === 'email') {
+        this.validators.push(emailValidate);
     }
 };
 

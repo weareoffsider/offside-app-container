@@ -1,6 +1,7 @@
 import {FormState, FormStepState} from "./FormData"
 import {AppState, AppActions, AppActor} from '../AppContainer/DataModel'
-import {FormError, FormWarning, fieldRequired} from './FormValidators'
+import {FormError, FormWarning,
+        fieldRequired, emailValidate} from './FormValidators'
 
 
 export default class FormDefinition<
@@ -101,6 +102,10 @@ export class FormFieldDefinition<
 
     if (required) {
       this.validators.push(fieldRequired)
+    }
+
+    if (fieldType === 'email') {
+      this.validators.push(emailValidate)
     }
   }
 }
