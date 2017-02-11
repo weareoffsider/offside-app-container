@@ -146,6 +146,7 @@ declare module "AppContainer/DataModel" {
         ui?: any;
         forms?: any;
         routes?: any;
+        screenStack?: any;
         comms: {
             [key: string]: CommsActions;
         };
@@ -249,8 +250,9 @@ declare module "Forms/FormManager" {
 declare module "UIEngine/Chrome" {
     import { AppState, AppActions } from "AppContainer/DataModel";
     export interface ChromeOptions<BusinessData, UIData, UIChromeData, ChromeRenderData> {
-        initializeChrome(container: Element, state: AppState<BusinessData, UIData>, chromeProps: UIChromeData, actions: AppActions<BusinessData, UIData>): ChromeRenderData;
+        createChrome(container: Element, state: AppState<BusinessData, UIData>, chromeProps: UIChromeData, actions: AppActions<BusinessData, UIData>): ChromeRenderData;
         updateChrome(container: Element, state: AppState<BusinessData, UIData>, chromeProps: UIChromeData, actions: AppActions<BusinessData, UIData>, data?: ChromeRenderData): ChromeRenderData;
+        destroyChrome(container: Element, data?: ChromeRenderData): void;
     }
     export default class ChromeDefinition<BusinessData, UIData, UIChromeData, ChromeRenderData> {
         private options;
@@ -262,8 +264,31 @@ declare module "UIEngine/Chrome" {
         private options;
         private chromeData;
         constructor(container: Element, options: ChromeOptions<BusinessData, UIData, UIChromeData, ChromeRenderData>);
-        initialize(state: AppState<BusinessData, UIData>, chromeProps: UIChromeData, actions: AppActions<BusinessData, UIData>): void;
+        create(state: AppState<BusinessData, UIData>, chromeProps: UIChromeData, actions: AppActions<BusinessData, UIData>): void;
         update(state: AppState<BusinessData, UIData>, chromeProps: UIChromeData, actions: AppActions<BusinessData, UIData>): void;
+        destroy(): void;
+    }
+}
+declare module "UIEngine/Screen" {
+    import { AppState, AppActions } from "AppContainer/DataModel";
+    export interface ScreenOptions<BusinessData, UIData, ScreenRenderData> {
+        createScreen(container: Element, state: AppState<BusinessData, UIData>, actions: AppActions<BusinessData, UIData>): ScreenRenderData;
+        updateScreen(container: Element, state: AppState<BusinessData, UIData>, actions: AppActions<BusinessData, UIData>, data?: ScreenRenderData): ScreenRenderData;
+        destroyScreen(container: Element, data?: ScreenRenderData): void;
+    }
+    export default class ScreenDefinition<BusinessData, UIData, ScreenRenderData> {
+        private options;
+        constructor(options: ScreenOptions<BusinessData, UIData, ScreenRenderData>);
+        getOptions(): ScreenOptions<BusinessData, UIData, ScreenRenderData>;
+    }
+    export class Screen<BusinessData, UIData, ScreenRenderData> {
+        private container;
+        private options;
+        private screenData;
+        constructor(container: Element, options: ScreenOptions<BusinessData, UIData, ScreenRenderData>);
+        create(state: AppState<BusinessData, UIData>, actions: AppActions<BusinessData, UIData>): void;
+        update(state: AppState<BusinessData, UIData>, actions: AppActions<BusinessData, UIData>): void;
+        destroy(): void;
     }
 }
 declare module "UIEngine/View" {
@@ -299,15 +324,17 @@ declare module "UIEngine/View" {
 declare module "UIEngine/UIContext" {
     import { ViewOptions, View } from "UIEngine/View";
     import { ChromeOptions } from "UIEngine/Chrome";
+    import { ScreenOptions } from "UIEngine/Screen";
     import RouteTable, { RouteMatcher } from "UIEngine/RouteTable";
     import { AppState, AppActions } from "AppContainer/DataModel";
-    export default class UIContext<BusinessData, UIData, UIChromeData, ViewRenderData, ChromeRenderData> {
+    export default class UIContext<BusinessData, UIData, UIChromeData, ViewRenderData, ChromeRenderData, ScreenRenderData> {
         private contextKey;
         private viewSet;
         private chromeSet;
         private activeChrome;
         routeTable: RouteTable;
         private viewContainer;
+        private screenStackContainer;
         private visibleViews;
         private activeView;
         private exitingView;
@@ -319,11 +346,15 @@ declare module "UIEngine/UIContext" {
         constructor(urlBase: string);
         addView(key: string, viewOptions: ViewOptions<BusinessData, UIData, UIChromeData, ViewRenderData>): void;
         addChrome(key: string, chromeOptions: ChromeOptions<BusinessData, UIData, UIChromeData, ChromeRenderData>): void;
+        pushScreen(screenOptions: ScreenOptions<BusinessData, UIData, ScreenRenderData>): void;
+        popScreen(): void;
+        screenActions(): any;
         addRoute(routePath: string, viewName: string, routeName?: string): void;
         getMatchFromRoute(path: string): RouteMatcher;
         setRenderOrder(newOrder: Array<string>): void;
         setContextKey(contextKey: string): void;
         setStateGetter(getter: () => AppState<BusinessData, UIData>): void;
+        setActionsGetter(getter: () => AppActions<BusinessData, UIData>): void;
         initialize(container: Element, props: AppState<BusinessData, UIData>, chromeProps: UIChromeData, appActions: AppActions<BusinessData, UIData>): void;
         update(state: AppState<BusinessData, UIData>, appActions: AppActions<BusinessData, UIData>): void;
         renderErrorView(viewName: string, container: Element, route: RouteMatcher, props: AppState<BusinessData, UIData>, chromeProps: UIChromeData, appActions: AppActions<BusinessData, UIData>, cb: any): void;
@@ -342,9 +373,9 @@ declare module "offside-app-container" {
     import UIContext from "UIEngine/UIContext";
     export default class OffsideAppContainer<BusinessData, UIData, UIChromeData, BusinessAction, UIAction> {
         localizeSpawner: Localize;
-        activeUI: UIContext<BusinessData, UIData, UIChromeData, any, any>;
+        activeUI: UIContext<BusinessData, UIData, UIChromeData, any, any, any>;
         uiContexts: {
-            [key: string]: UIContext<BusinessData, UIData, UIChromeData, any, any>;
+            [key: string]: UIContext<BusinessData, UIData, UIChromeData, any, any, any>;
         };
         commsChannels: {
             [key: string]: CommsChannel<any>;
@@ -363,10 +394,11 @@ declare module "offside-app-container" {
         setUiDispatch(func: (a: UIAction) => void): void;
         setUiActions(actionObject: any): void;
         setupLocalisation(translationResources: any): void;
-        addUIContext<ViewData, ChromeData>(name: string, context: UIContext<BusinessData, UIData, UIChromeData, ViewData, ChromeData>): void;
+        addUIContext<ViewData, ChromeData, ScreenData>(name: string, context: UIContext<BusinessData, UIData, UIChromeData, ViewData, ChromeData, ScreenData>): void;
         loadUIContext(contextName: string): void;
         initializeAppState(lang: string, businessData: BusinessData, uiData: UIData, chromeData: UIChromeData): void;
         getState(): AppState<BusinessData, UIData>;
+        getActions(): AppActions<BusinessData, UIData>;
         getActor(): AppActor<BusinessData, UIData, BusinessAction, UIAction>;
         initializeUI(container: Element): void;
         updateCommsState(key: string, state: CommsChannelState): void;

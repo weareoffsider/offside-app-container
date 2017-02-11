@@ -773,17 +773,66 @@ var Chrome = function () {
     }
 
     createClass(Chrome, [{
-        key: "initialize",
-        value: function initialize(state, chromeProps, actions) {
-            this.chromeData = this.options.initializeChrome(this.container, state, chromeProps, actions);
+        key: "create",
+        value: function create(state, chromeProps, actions) {
+            this.chromeData = this.options.createChrome(this.container, state, chromeProps, actions);
         }
     }, {
         key: "update",
         value: function update(state, chromeProps, actions) {
             this.chromeData = this.options.updateChrome(this.container, state, chromeProps, actions, this.chromeData);
         }
+    }, {
+        key: "destroy",
+        value: function destroy() {
+            this.options.destroyChrome(this.container, this.chromeData);
+        }
     }]);
     return Chrome;
+}();
+
+var ScreenDefinition = function () {
+    function ScreenDefinition(options) {
+        classCallCheck(this, ScreenDefinition);
+
+        this.options = options;
+    }
+
+    createClass(ScreenDefinition, [{
+        key: "getOptions",
+        value: function getOptions() {
+            return this.options;
+        }
+    }]);
+    return ScreenDefinition;
+}();
+
+var Screen = function () {
+    function Screen(container, options) {
+        classCallCheck(this, Screen);
+
+        this.container = container;
+        this.options = options;
+    }
+
+    createClass(Screen, [{
+        key: "create",
+        value: function create(state, actions) {
+            this.screenData = this.options.createScreen(this.container, state, actions);
+        }
+    }, {
+        key: "update",
+        value: function update(state, actions) {
+            this.screenData = this.options.updateScreen(this.container, state, actions, this.screenData);
+        }
+    }, {
+        key: "destroy",
+        value: function destroy() {
+            this.options.destroyScreen(this.container, this.screenData);
+            this.container.parentNode.removeChild(this.container);
+        }
+    }]);
+    return Screen;
 }();
 
 /* RouteTable
@@ -899,6 +948,28 @@ var UIContext = function () {
             this.chromeSet[key] = new ChromeDefinition(chromeOptions);
         }
     }, {
+        key: 'pushScreen',
+        value: function pushScreen(screenOptions) {
+            var screenDef = new ScreenDefinition(screenOptions);
+            var screenContainer = document.createElement("div");
+            this.screenStackContainer.appendChild(screenContainer);
+            var scrn = new Screen(screenContainer, screenOptions);
+            scrn.create(this.getLatestAppState(), this.getLatestAppActions());
+        }
+    }, {
+        key: 'popScreen',
+        value: function popScreen() {
+            console.log('pop screen');
+        }
+    }, {
+        key: 'screenActions',
+        value: function screenActions() {
+            return {
+                push: this.pushScreen.bind(this),
+                pop: this.popScreen.bind(this)
+            };
+        }
+    }, {
         key: 'addRoute',
         value: function addRoute(routePath, viewName, routeName) {
             this.routeTable.addRoute(routePath, viewName, routeName);
@@ -925,6 +996,11 @@ var UIContext = function () {
             this.getLatestAppState = getter;
         }
     }, {
+        key: 'setActionsGetter',
+        value: function setActionsGetter(getter) {
+            this.getLatestAppActions = getter;
+        }
+    }, {
         key: 'initialize',
         value: function initialize(container, props, chromeProps, appActions) {
             var _this = this;
@@ -937,15 +1013,18 @@ var UIContext = function () {
                     chromeContainer.id = _this.contextKey + '-' + name;
                     container.appendChild(chromeContainer);
                     _this.activeChrome[name] = new Chrome(chromeContainer, _this.chromeSet[name].getOptions());
-                    _this.activeChrome[name].initialize(props, chromeProps, appActions);
+                    _this.activeChrome[name].create(props, chromeProps, appActions);
                 } else {
-                    console.log("render root");
                     var viewsContainer = document.createElement("div");
                     viewsContainer.id = _this.contextKey + '-viewsContainer';
                     container.appendChild(viewsContainer);
                     _this.viewContainer = viewsContainer;
                 }
             });
+            var screenStackContainer = document.createElement("div");
+            screenStackContainer.id = this.contextKey + '-screenStack';
+            container.appendChild(screenStackContainer);
+            this.screenStackContainer = screenStackContainer;
             if (props.route) {
                 this.loadRoute(props.route, props, chromeProps, appActions);
             }
@@ -1149,6 +1228,7 @@ var OffsideAppContainer = function () {
         value: function loadUIContext(contextName) {
             this.activeUI = this.uiContexts[contextName];
             this.activeUI.setContextKey(contextName);
+            this.appActions.screenStack = this.activeUI.screenActions();
         }
     }, {
         key: 'initializeAppState',
@@ -1175,6 +1255,11 @@ var OffsideAppContainer = function () {
             return this.appState;
         }
     }, {
+        key: 'getActions',
+        value: function getActions() {
+            return this.appActions;
+        }
+    }, {
         key: 'getActor',
         value: function getActor() {
             return this.appActor;
@@ -1183,6 +1268,7 @@ var OffsideAppContainer = function () {
         key: 'initializeUI',
         value: function initializeUI(container) {
             this.activeUI.setStateGetter(this.getState.bind(this));
+            this.activeUI.setActionsGetter(this.getActions.bind(this));
             this.setupRouteListeners();
             this.activeUI.initialize(container, this.appState, this.chromeState, this.appActions);
         }

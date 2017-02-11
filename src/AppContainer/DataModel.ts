@@ -18,6 +18,7 @@ export interface AppActions<BusinessData, UIData> {
   ui?: any
   forms?: any
   routes?: any
+  screenStack?: any
   comms: {[key: string]: CommsActions}
 }
 

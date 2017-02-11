@@ -16,8 +16,8 @@ export default class OffsideAppContainer<
   BusinessAction, UIAction
 > {
   public localizeSpawner: Localize
-  public activeUI: UIContext<BusinessData, UIData, UIChromeData, any, any>
-  public uiContexts: {[key: string]: UIContext<BusinessData, UIData, UIChromeData, any, any>}
+  public activeUI: UIContext<BusinessData, UIData, UIChromeData, any, any, any>
+  public uiContexts: {[key: string]: UIContext<BusinessData, UIData, UIChromeData, any, any, any>}
   public commsChannels: {[key: string]: CommsChannel<any>}
   public appState: AppState<BusinessData, UIData>
   public chromeState: UIChromeData
@@ -90,9 +90,9 @@ export default class OffsideAppContainer<
     this.localizeSpawner = new Localize(translationResources)
   }
 
-  addUIContext<ViewData, ChromeData> (
+  addUIContext<ViewData, ChromeData, ScreenData> (
     name: string,
-    context: UIContext<BusinessData, UIData, UIChromeData, ViewData, ChromeData>
+    context: UIContext<BusinessData, UIData, UIChromeData, ViewData, ChromeData, ScreenData>
   ) {
     this.uiContexts[name] = context
   }
@@ -100,6 +100,7 @@ export default class OffsideAppContainer<
   loadUIContext (contextName: string) {
     this.activeUI = this.uiContexts[contextName]
     this.activeUI.setContextKey(contextName)
+    this.appActions.screenStack = this.activeUI.screenActions()
   }
 
   initializeAppState(
@@ -129,12 +130,17 @@ export default class OffsideAppContainer<
     return this.appState
   }
 
+  getActions () {
+    return this.appActions
+  }
+
   getActor () {
     return this.appActor
   }
 
   initializeUI (container: Element) {
     this.activeUI.setStateGetter(this.getState.bind(this))
+    this.activeUI.setActionsGetter(this.getActions.bind(this))
     this.setupRouteListeners()
     this.activeUI.initialize(
       container, this.appState, this.chromeState, this.appActions

@@ -1,5 +1,6 @@
 import ViewDefinition, {ViewOptions, View} from './View'
 import ChromeDefinition, {ChromeOptions, Chrome} from './Chrome'
+import ScreenDefinition, {ScreenOptions, Screen} from './Screen'
 import RouteTable, {RouteMatcher} from './RouteTable'
 import {AppState, AppActions} from '../AppContainer/DataModel'
 import {
@@ -8,7 +9,8 @@ import {
 } from '../Comms/Errors'
 
 export default class UIContext<BusinessData, UIData, UIChromeData,
-                               ViewRenderData, ChromeRenderData> {
+                               ViewRenderData, ChromeRenderData,
+                               ScreenRenderData> {
   private contextKey: string
   private viewSet:
     {[key: string]: ViewDefinition<BusinessData, UIData, UIChromeData, ViewRenderData>}
@@ -18,6 +20,7 @@ export default class UIContext<BusinessData, UIData, UIChromeData,
     {[key: string]: Chrome<BusinessData, UIData, UIChromeData, ChromeRenderData>}
   public routeTable: RouteTable
   private viewContainer: Element
+  private screenStackContainer: Element
   private visibleViews:
     {[route: string]: View<BusinessData, UIData, UIChromeData, ViewRenderData>}
   private activeView: View<BusinessData, UIData, UIChromeData, ViewRenderData>
@@ -54,6 +57,31 @@ export default class UIContext<BusinessData, UIData, UIChromeData,
     this.chromeSet[key] = new ChromeDefinition(chromeOptions)
   }
 
+  pushScreen (
+    screenOptions: ScreenOptions<BusinessData, UIData, ScreenRenderData>
+  ) {
+    const screenDef = new ScreenDefinition(screenOptions)
+    const screenContainer = document.createElement("div")
+    this.screenStackContainer.appendChild(screenContainer)
+
+    const scrn = new Screen(screenContainer, screenOptions)
+    scrn.create(
+      this.getLatestAppState(),
+      this.getLatestAppActions()
+    )
+  }
+
+  popScreen () {
+    console.log('pop screen')
+  }
+
+  screenActions (): any {
+    return {
+      push: this.pushScreen.bind(this),
+      pop: this.popScreen.bind(this),
+    }
+  }
+
   addRoute (routePath: string, viewName: string, routeName?: string) {
     this.routeTable.addRoute(routePath, viewName, routeName)
   }
@@ -67,6 +95,10 @@ export default class UIContext<BusinessData, UIData, UIChromeData,
   setContextKey (contextKey: string) { this.contextKey = contextKey }
   setStateGetter (getter: () => AppState<BusinessData, UIData>) {
     this.getLatestAppState = getter
+  }
+
+  setActionsGetter (getter: () => AppActions<BusinessData, UIData>) {
+    this.getLatestAppActions = getter
   }
 
   initialize (
@@ -87,15 +119,19 @@ export default class UIContext<BusinessData, UIData, UIChromeData,
             chromeContainer,
             this.chromeSet[name].getOptions()
         )
-        this.activeChrome[name].initialize(props, chromeProps, appActions)
+        this.activeChrome[name].create(props, chromeProps, appActions)
       } else {
-        console.log("render root")
         const viewsContainer = document.createElement("div")
         viewsContainer.id = `${this.contextKey}-viewsContainer`
         container.appendChild(viewsContainer)
         this.viewContainer = viewsContainer
       }
     })
+
+    const screenStackContainer = document.createElement("div")
+    screenStackContainer.id = `${this.contextKey}-screenStack`
+    container.appendChild(screenStackContainer)
+    this.screenStackContainer = screenStackContainer
 
     if (props.route) {
       this.loadRoute(props.route, props, chromeProps, appActions)

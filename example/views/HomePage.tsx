@@ -5,10 +5,24 @@ import {
   ExampleAppActions
 } from "../ExampleAppData"
 
+import reactScreen from '../reactScreen'
+import DialogScreen from '../screens/DialogScreen'
+
 export default class Header extends React.Component<ExampleAppProps, any> {
   static preLoad (state: ExampleAppState, actions: ExampleAppActions) {
     console.log("preloading")
     return actions.comms['placeholder'].get("/posts/1")
+  }
+
+  constructor (props, context) {
+    super(props, context)
+    this.showDialog = this.showDialog.bind(this)
+  }
+
+  showDialog (e) {
+    const {actions: {screenStack: {push}}} = this.props
+
+    push(reactScreen(DialogScreen))
   }
 
   render () {
@@ -23,6 +37,7 @@ export default class Header extends React.Component<ExampleAppProps, any> {
       <span>{businessData.counter}</span>
       <button onClick={actions.business.increment}>+</button>
       <br />
+      <a onClick={this.showDialog}>{t_('show_dialog')}</a>
       <br />
       <a href={routes.getPath('about')}>{t_('about')}</a>
       <br />

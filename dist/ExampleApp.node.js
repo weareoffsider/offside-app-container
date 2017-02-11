@@ -101,16 +101,74 @@ var Footer = function (_React$Component) {
     return Footer;
 }(React.Component);
 
+var __assign = undefined && undefined.__assign || Object.assign || function (t) {
+    for (var s, i = 1, n = arguments.length; i < n; i++) {
+        s = arguments[i];
+        for (var p in s) {
+            if (Object.prototype.hasOwnProperty.call(s, p)) t[p] = s[p];
+        }
+    }
+    return t;
+};
+function reactScreen(ScreenComponent) {
+    return {
+        createScreen: function createScreen(container, state, appActions) {
+            ReactDOM.render(React.createElement(ScreenComponent, __assign({}, state)), container);
+            return {};
+        },
+        updateScreen: function updateScreen(container, state, appActions) {
+            ReactDOM.render(React.createElement(ScreenComponent, __assign({}, state)), container);
+            return {};
+        },
+        destroyScreen: function destroyScreen(container, data) {
+            ReactDOM.unmountComponentAtNode(container);
+        }
+    };
+}
+
+var DialogScreen = function (_React$Component) {
+    inherits(DialogScreen, _React$Component);
+
+    function DialogScreen() {
+        classCallCheck(this, DialogScreen);
+        return possibleConstructorReturn(this, (DialogScreen.__proto__ || Object.getPrototypeOf(DialogScreen)).apply(this, arguments));
+    }
+
+    createClass(DialogScreen, [{
+        key: "render",
+        value: function render() {
+            var _props = this.props;
+            var l10n = _props.l10n;
+            var routes = _props.routes;
+
+            var t_ = l10n.translate;
+            return React.createElement("div", { className: "DialogScreen" }, React.createElement("h2", null, "Some Dialog"), React.createElement("p", null, "Hello everyone."));
+        }
+    }]);
+    return DialogScreen;
+}(React.Component);
+
 var Header$1 = function (_React$Component) {
     inherits(Header, _React$Component);
 
-    function Header() {
+    function Header(props, context) {
         classCallCheck(this, Header);
-        return possibleConstructorReturn(this, (Header.__proto__ || Object.getPrototypeOf(Header)).apply(this, arguments));
+
+        var _this = possibleConstructorReturn(this, (Header.__proto__ || Object.getPrototypeOf(Header)).call(this, props, context));
+
+        _this.showDialog = _this.showDialog.bind(_this);
+        return _this;
     }
 
     createClass(Header, [{
-        key: "render",
+        key: 'showDialog',
+        value: function showDialog(e) {
+            var push = this.props.actions.screenStack.push;
+
+            push(reactScreen(DialogScreen));
+        }
+    }, {
+        key: 'render',
         value: function render() {
             var _props = this.props;
             var l10n = _props.l10n;
@@ -119,10 +177,10 @@ var Header$1 = function (_React$Component) {
             var actions = _props.actions;
 
             var t_ = l10n.translate;
-            return React.createElement("section", { className: "HomePage" }, React.createElement("h1", null, "App Body in Heyah"), React.createElement("button", { onClick: actions.ui.swapTitle }, t_('swap_title')), React.createElement("h3", null, "Counter"), React.createElement("button", { onClick: actions.business.decrement }, "-"), React.createElement("span", null, businessData.counter), React.createElement("button", { onClick: actions.business.increment }, "+"), React.createElement("br", null), React.createElement("br", null), React.createElement("a", { href: routes.getPath('about') }, t_('about')), React.createElement("br", null), React.createElement("a", { href: routes.getPath('registration') }, t_('registration')));
+            return React.createElement("section", { className: "HomePage" }, React.createElement("h1", null, "App Body in Heyah"), React.createElement("button", { onClick: actions.ui.swapTitle }, t_('swap_title')), React.createElement("h3", null, "Counter"), React.createElement("button", { onClick: actions.business.decrement }, "-"), React.createElement("span", null, businessData.counter), React.createElement("button", { onClick: actions.business.increment }, "+"), React.createElement("br", null), React.createElement("a", { onClick: this.showDialog }, t_('show_dialog')), React.createElement("br", null), React.createElement("a", { href: routes.getPath('about') }, t_('about')), React.createElement("br", null), React.createElement("a", { href: routes.getPath('registration') }, t_('registration')));
         }
     }], [{
-        key: "preLoad",
+        key: 'preLoad',
         value: function preLoad(state, actions) {
             console.log("preloading");
             return actions.comms['placeholder'].get("/posts/1");
@@ -351,7 +409,7 @@ var Always404Page = function (_React$Component) {
     return Always404Page;
 }(React.Component);
 
-var __assign = undefined && undefined.__assign || Object.assign || function (t) {
+var __assign$1 = undefined && undefined.__assign || Object.assign || function (t) {
     for (var s, i = 1, n = arguments.length; i < n; i++) {
         s = arguments[i];
         for (var p in s) {
@@ -362,18 +420,21 @@ var __assign = undefined && undefined.__assign || Object.assign || function (t) 
 };
 function reactChrome(ChromeComponent) {
     return {
-        initializeChrome: function initializeChrome(container, state, chromeState, appActions) {
-            ReactDOM.render(React.createElement(ChromeComponent, __assign({}, state, chromeState)), container);
+        createChrome: function createChrome(container, state, chromeState, appActions) {
+            ReactDOM.render(React.createElement(ChromeComponent, __assign$1({}, state, chromeState)), container);
             return {};
         },
         updateChrome: function updateChrome(container, state, chromeState, appActions) {
-            ReactDOM.render(React.createElement(ChromeComponent, __assign({}, state, chromeState)), container);
+            ReactDOM.render(React.createElement(ChromeComponent, __assign$1({}, state, chromeState)), container);
             return {};
+        },
+        destroyChrome: function destroyChrome(container, data) {
+            ReactDOM.unmountComponentAtNode(container);
         }
     };
 }
 
-var __assign$1 = undefined && undefined.__assign || Object.assign || function (t) {
+var __assign$2 = undefined && undefined.__assign || Object.assign || function (t) {
     for (var s, i = 1, n = arguments.length; i < n; i++) {
         s = arguments[i];
         for (var p in s) {
@@ -387,13 +448,13 @@ function reactView(ViewComponent) {
         preLoad: ViewComponent.preLoad,
         postLoad: ViewComponent.postLoad,
         createView: function createView(container, state, actions) {
-            ReactDOM.render(React.createElement(ViewComponent, __assign$1({}, state, { actions: actions })), container);
+            ReactDOM.render(React.createElement(ViewComponent, __assign$2({}, state, { actions: actions })), container);
             return {};
         },
 
         updateChrome: ViewComponent.updateChrome,
         updateView: function updateView(container, state, actions, data) {
-            ReactDOM.render(React.createElement(ViewComponent, __assign$1({}, state, { actions: actions })), container);
+            ReactDOM.render(React.createElement(ViewComponent, __assign$2({}, state, { actions: actions })), container);
             return {};
         },
         destroyView: function destroyView(container, data) {

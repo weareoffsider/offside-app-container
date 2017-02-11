@@ -5,7 +5,7 @@ export default function reactChrome<AppState, UIChromeData> (
   ChromeComponent: any
 ) {
   return {
-    initializeChrome (
+    createChrome (
       container: Element, state: AppState, chromeState: UIChromeData,
       appActions: any
     ) {
@@ -26,5 +26,9 @@ export default function reactChrome<AppState, UIChromeData> (
       )
       return {}
     }
+
+    destroyChrome (container: Element, data: any) {
+      ReactDOM.unmountComponentAtNode(container)
+    },
   }
 }

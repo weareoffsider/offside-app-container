@@ -2,7 +2,7 @@ import {AppState, AppActions} from '../AppContainer/DataModel'
 
 export interface ChromeOptions<BusinessData, UIData, UIChromeData, ChromeRenderData> {
   /* Create the view inside the given container */
-  initializeChrome(
+  createChrome(
     container: Element, state: AppState<BusinessData, UIData>,
     chromeProps: UIChromeData,
     actions: AppActions<BusinessData, UIData>
@@ -14,6 +14,8 @@ export interface ChromeOptions<BusinessData, UIData, UIChromeData, ChromeRenderD
     chromeProps: UIChromeData, actions: AppActions<BusinessData, UIData>,
     data?: ChromeRenderData
   ): ChromeRenderData;
+
+  destroyChrome(container: Element, data?: ChromeRenderData): void
 }
 
 export default class ChromeDefinition<BusinessData, UIData, UIChromeData, ChromeRenderData> {
@@ -34,12 +36,12 @@ export class Chrome<BusinessData, UIData, UIChromeData, ChromeRenderData> {
   ) {
   }
 
-  initialize (
+  create (
     state: AppState<BusinessData, UIData>,
     chromeProps: UIChromeData,
     actions: AppActions<BusinessData, UIData>
   ) {
-    this.chromeData = this.options.initializeChrome(
+    this.chromeData = this.options.createChrome(
       this.container, state, chromeProps, actions
     )
   }
@@ -52,5 +54,10 @@ export class Chrome<BusinessData, UIData, UIChromeData, ChromeRenderData> {
     this.chromeData = this.options.updateChrome(
       this.container, state, chromeProps,actions, this.chromeData
     )
+  }
+
+  destroy (
+  ) {
+    this.options.destroyChrome(this.container, this.chromeData)
   }
 }
