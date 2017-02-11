@@ -12,6 +12,7 @@ export default class Header extends React.Component<ExampleAppState, any> {
       <ul>
         <li><a href={routes.getPath('home')}>{t_('home')}</a></li>
         <li><a href={routes.getPath('about')}>{t_('about')}</a></li>
+        <li><a href={routes.getPath('posts')}>{t_('posts')}</a></li>
         <li><a href={routes.getPath('always404')}>{t_('always404')}</a></li>
       </ul>
 

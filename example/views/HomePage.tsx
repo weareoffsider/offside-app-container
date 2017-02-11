@@ -20,7 +20,7 @@ export default class Header extends React.Component<ExampleAppProps, any> {
       <button onClick={actions.ui.swapTitle}>{t_('swap_title')}</button>
       <h3>Counter</h3>
       <button onClick={actions.business.decrement}>-</button>
-      <span>{businessData}</span>
+      <span>{businessData.counter}</span>
       <button onClick={actions.business.increment}>+</button>
       <br />
       <br />

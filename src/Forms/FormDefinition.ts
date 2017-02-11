@@ -4,6 +4,13 @@ import {FormError, FormWarning,
         fieldRequired, emailValidate} from './FormValidators'
 
 
+export enum FormValidationStyle {
+  WhileEditing,
+  OnBlur,
+  OnStepEnd,
+}
+
+
 export default class FormDefinition<
   BusinessData, UIData, BusinessAction, UIAction
 > {
@@ -33,6 +40,8 @@ export default class FormDefinition<
     return {
       formType,
       formKey,
+      currentStep: this.stepOrder[0],
+      complete: false,
       steps,
     }
   }
@@ -77,18 +86,12 @@ export class FormStepDefinition<
 }
 
 
-export enum FormValidationStyle {
-  WhileEditing,
-  OnBlur,
-  OnStepEnd,
-}
-
-
 export class FormFieldDefinition<
   BusinessData, UIData, BusinessAction, UIAction
 > {
   readonly validators: Array<(
     value: any,
+    formState: FormState,
     appState: AppState<BusinessData, UIData>,
     appActions: AppActor<BusinessData, UIData, BusinessAction, UIAction>
   ) => Promise<boolean>>
@@ -97,6 +100,12 @@ export class FormFieldDefinition<
     readonly fieldType: string,
     readonly required: boolean = true,
     readonly validationStyle: FormValidationStyle = FormValidationStyle.OnStepEnd,
+    extraValidators: Array<(
+      value: any,
+      formState: FormState,
+      appState: AppState<BusinessData, UIData>,
+      appActions: AppActor<BusinessData, UIData, BusinessAction, UIAction>
+    ) => Promise<boolean>> = []
   ) {
     this.validators = []
 
@@ -107,5 +116,7 @@ export class FormFieldDefinition<
     if (fieldType === 'email') {
       this.validators.push(emailValidate)
     }
+
+    this.validators = this.validators.concat(extraValidators)
   }
 }

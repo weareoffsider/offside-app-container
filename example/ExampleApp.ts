@@ -5,6 +5,7 @@ import Header from "./chrome/Header"
 import Footer from "./chrome/Footer"
 import HomePage from "./views/HomePage"
 import AboutPage from "./views/AboutPage"
+import PostsPage from "./views/PostsPage"
 import RegistrationPage, {RegistrationForm} from "./views/RegistrationPage"
 import NotFoundPage from "./views/NotFoundPage"
 import OfflinePage from "./views/OfflinePage"
@@ -52,6 +53,7 @@ mainUI.setRenderOrder([
 
 mainUI.addView("home", reactView(HomePage))
 mainUI.addView("about", reactView(AboutPage))
+mainUI.addView("posts", reactView(PostsPage))
 mainUI.addView("registration", reactView(RegistrationPage))
 mainUI.addView("always404", reactView(Always404Page))
 mainUI.addView("**404", reactView(NotFoundPage))
@@ -59,6 +61,7 @@ mainUI.addView("**offline", reactView(OfflinePage))
 
 mainUI.addRoute("/", "home")
 mainUI.addRoute("/about", "about")
+mainUI.addRoute("/posts", "posts")
 mainUI.addRoute("/registration", "registration")
 mainUI.addRoute("/always404", "always404")
 
@@ -71,7 +74,10 @@ app.loadUIContext("main")
 
 app.initializeAppState(
   "en",
-  0,
+  {
+    counter: 0,
+    postArray: [],
+  },
   {
     title: "Start Title",
   }, {

@@ -1,3 +1,4 @@
+import {FormState} from "./FormData"
 import {AppState, AppActions, AppActor} from '../AppContainer/DataModel'
 
 export class FormError extends Error {
@@ -17,6 +18,7 @@ export class FormWarning extends Error {
 
 export function fieldRequired<BusinessData, UIData, BusinessAction, UIAction> (
   value: any,
+  formState: FormState,
   appState: AppState<BusinessData, UIData>,
   appActions: AppActor<BusinessData, UIData, BusinessAction, UIAction>
 ): Promise<boolean> {
@@ -35,6 +37,7 @@ export function fieldRequired<BusinessData, UIData, BusinessAction, UIAction> (
 
 export function emailValidate<BusinessData, UIData, BusinessAction, UIAction> (
   value: any,
+  formState: FormState,
   appState: AppState<BusinessData, UIData>,
   appActions: AppActor<BusinessData, UIData, BusinessAction, UIAction>
 ): Promise<boolean> {

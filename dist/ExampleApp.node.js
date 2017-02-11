@@ -75,7 +75,7 @@ var Header = function (_React$Component) {
             var routes = _props.routes;
 
             var t_ = l10n.translate;
-            return React.createElement("header", { className: "Header", style: { marginBottom: "8rem" } }, React.createElement("h1", null, t_("app_title"), " ", uiData.title), React.createElement("ul", null, React.createElement("li", null, React.createElement("a", { href: routes.getPath('home') }, t_('home'))), React.createElement("li", null, React.createElement("a", { href: routes.getPath('about') }, t_('about'))), React.createElement("li", null, React.createElement("a", { href: routes.getPath('always404') }, t_('always404')))));
+            return React.createElement("header", { className: "Header", style: { marginBottom: "8rem" } }, React.createElement("h1", null, t_("app_title"), " ", uiData.title), React.createElement("ul", null, React.createElement("li", null, React.createElement("a", { href: routes.getPath('home') }, t_('home'))), React.createElement("li", null, React.createElement("a", { href: routes.getPath('about') }, t_('about'))), React.createElement("li", null, React.createElement("a", { href: routes.getPath('posts') }, t_('posts'))), React.createElement("li", null, React.createElement("a", { href: routes.getPath('always404') }, t_('always404')))));
         }
     }]);
     return Header;
@@ -119,7 +119,7 @@ var Header$1 = function (_React$Component) {
             var actions = _props.actions;
 
             var t_ = l10n.translate;
-            return React.createElement("section", { className: "HomePage" }, React.createElement("h1", null, "App Body in Heyah"), React.createElement("button", { onClick: actions.ui.swapTitle }, t_('swap_title')), React.createElement("h3", null, "Counter"), React.createElement("button", { onClick: actions.business.decrement }, "-"), React.createElement("span", null, businessData), React.createElement("button", { onClick: actions.business.increment }, "+"), React.createElement("br", null), React.createElement("br", null), React.createElement("a", { href: routes.getPath('about') }, t_('about')), React.createElement("br", null), React.createElement("a", { href: routes.getPath('registration') }, t_('registration')));
+            return React.createElement("section", { className: "HomePage" }, React.createElement("h1", null, "App Body in Heyah"), React.createElement("button", { onClick: actions.ui.swapTitle }, t_('swap_title')), React.createElement("h3", null, "Counter"), React.createElement("button", { onClick: actions.business.decrement }, "-"), React.createElement("span", null, businessData.counter), React.createElement("button", { onClick: actions.business.increment }, "+"), React.createElement("br", null), React.createElement("br", null), React.createElement("a", { href: routes.getPath('about') }, t_('about')), React.createElement("br", null), React.createElement("a", { href: routes.getPath('registration') }, t_('registration')));
         }
     }], [{
         key: "preLoad",
@@ -159,6 +159,40 @@ var AboutPage = function (_React$Component) {
     return AboutPage;
 }(React.Component);
 
+var PostsPage = function (_React$Component) {
+    inherits(PostsPage, _React$Component);
+
+    function PostsPage() {
+        classCallCheck(this, PostsPage);
+        return possibleConstructorReturn(this, (PostsPage.__proto__ || Object.getPrototypeOf(PostsPage)).apply(this, arguments));
+    }
+
+    createClass(PostsPage, [{
+        key: "render",
+        value: function render() {
+            var _props = this.props;
+            var l10n = _props.l10n;
+            var routes = _props.routes;
+            var businessData = _props.businessData;
+
+            var t_ = l10n.translate;
+            var posts = businessData.postArray;
+            return React.createElement("section", { className: "PostsPage" }, React.createElement("h1", null, "App Body in Posts Page"), posts.map(function (post) {
+                return React.createElement("article", { key: post.id }, React.createElement("h2", null, post.id, " - ", post.title), React.createElement("p", null, post.body));
+            }), React.createElement("a", { href: routes.getPath('home') }, t_('home')));
+        }
+    }], [{
+        key: "preLoad",
+        value: function preLoad(state, actions) {
+            console.log("preloading");
+            return actions.comms['placeholder'].get("/posts").then(function (data) {
+                return actions.business.storePosts(data);
+            });
+        }
+    }]);
+    return PostsPage;
+}(React.Component);
+
 var FORM_KEY = "registration";
 var STEP_KEY = "default";
 
@@ -172,6 +206,7 @@ var RegistrationPage = function (_React$Component) {
 
         _this.updateField = _this.updateField.bind(_this);
         _this.blurField = _this.blurField.bind(_this);
+        _this.submitForm = _this.submitForm.bind(_this);
         return _this;
     }
 
@@ -190,6 +225,18 @@ var RegistrationPage = function (_React$Component) {
             actions.forms.blurField(FORM_KEY, STEP_KEY, e.target.name);
         }
     }, {
+        key: "submitForm",
+        value: function submitForm(e) {
+            e.preventDefault();
+            var actions = this.props.actions;
+
+            actions.forms.submitStep(FORM_KEY, STEP_KEY).then(function (data) {
+                console.log(data, 'submit form');
+            }, function (errors) {
+                console.log(errors, 'error');
+            });
+        }
+    }, {
         key: "render",
         value: function render() {
             var _props = this.props;
@@ -204,7 +251,7 @@ var RegistrationPage = function (_React$Component) {
             var warnData = forms[FORM_KEY].steps[STEP_KEY].warnings;
             var t_ = l10n.translate;
             console.log(errorData);
-            return React.createElement("section", { className: "HomePage" }, React.createElement("h1", null, t_('registration')), React.createElement("label", { htmlFor: "username" }, t_("username"), " ", React.createElement("br", null), React.createElement("input", { onChange: this.updateField, onBlur: this.blurField, id: "username", name: "username", value: formData.username }), errorData.username.length > 0 && React.createElement("p", { className: "error" }, errorData.username.join(' '))), React.createElement("br", null), React.createElement("br", null), React.createElement("label", { htmlFor: "email" }, t_("email"), " ", React.createElement("br", null), React.createElement("input", { onChange: this.updateField, onBlur: this.blurField, id: "email", type: "email", name: "email", value: formData.email }), errorData.email.length > 0 && React.createElement("p", { className: "error" }, errorData.email.join(' '))), React.createElement("br", null), React.createElement("br", null), React.createElement("label", { htmlFor: "password" }, t_("password"), " ", React.createElement("br", null), React.createElement("input", { onChange: this.updateField, onBlur: this.blurField, id: "password", type: "password", name: "password", value: formData.password }), errorData.password.length > 0 && React.createElement("p", { className: "error" }, errorData.password.join(' '))));
+            return React.createElement("form", { onSubmit: this.submitForm, className: "HomePage" }, React.createElement("h1", null, t_('registration')), React.createElement("label", { htmlFor: "username" }, t_("username"), " ", React.createElement("br", null), React.createElement("input", { onChange: this.updateField, onBlur: this.blurField, id: "username", name: "username", value: formData.username }), errorData.username.length > 0 && React.createElement("p", { className: "error" }, errorData.username.join(' '))), React.createElement("br", null), React.createElement("br", null), React.createElement("label", { htmlFor: "email" }, t_("email"), " ", React.createElement("br", null), React.createElement("input", { onChange: this.updateField, onBlur: this.blurField, id: "email", type: "email", name: "email", value: formData.email }), errorData.email.length > 0 && React.createElement("p", { className: "error" }, errorData.email.join(' '))), React.createElement("br", null), React.createElement("br", null), React.createElement("label", { htmlFor: "password" }, t_("password"), " ", React.createElement("br", null), React.createElement("input", { onChange: this.updateField, onBlur: this.blurField, id: "password", type: "password", name: "password", value: formData.password }), errorData.password.length > 0 && React.createElement("p", { className: "error" }, errorData.password.join(' '))), React.createElement("br", null), React.createElement("br", null), React.createElement("label", { htmlFor: "magicword" }, t_("magicword"), " ", React.createElement("br", null), React.createElement("input", { onChange: this.updateField, onBlur: this.blurField, id: "magicword", type: "text", name: "magicword", value: formData.magicword }), errorData.magicword.length > 0 && React.createElement("p", { className: "error" }, errorData.magicword.join(' '))), React.createElement("br", null), React.createElement("br", null), React.createElement("button", { type: "submit" }, t_('submit_user')));
         }
     }], [{
         key: "preLoad",
@@ -218,10 +265,18 @@ var RegistrationPage = function (_React$Component) {
 
 var RegistrationForm = new OffsideAppContainer.FormDefinition("registration");
 var registrationStep = new OffsideAppContainer.FormStepDefinition(STEP_KEY);
+function magicWordProvided(value, formState) {
+    console.log('magic word check', value);
+    if (value != "please") {
+        return Promise.reject(new OffsideAppContainer.FormError("You didn't say the magic word."));
+    }
+    return Promise.resolve(true);
+}
 RegistrationForm.addStep(STEP_KEY, registrationStep);
 registrationStep.addField("username", new OffsideAppContainer.FormFieldDefinition("text", true, OffsideAppContainer.FormValidationStyle.OnBlur));
 registrationStep.addField("email", new OffsideAppContainer.FormFieldDefinition("email", true, OffsideAppContainer.FormValidationStyle.WhileEditing));
 registrationStep.addField("password", new OffsideAppContainer.FormFieldDefinition("password", true, OffsideAppContainer.FormValidationStyle.WhileEditing));
+registrationStep.addField("magicword", new OffsideAppContainer.FormFieldDefinition("magicword", true, OffsideAppContainer.FormValidationStyle.OnStepEnd, [magicWordProvided]));
 
 var NotFoundPage = function (_React$Component) {
     inherits(NotFoundPage, _React$Component);
@@ -360,14 +415,35 @@ function counter() {
             return state;
     }
 }
+function postArray() {
+    var state = arguments.length <= 0 || arguments[0] === undefined ? [] : arguments[0];
+    var action = arguments[1];
+
+    switch (action.type) {
+        case 'STORE_POSTS':
+            return action.posts;
+        default:
+            return state;
+    }
+}
+var reducer = redux.combineReducers({
+    counter: counter,
+    postArray: postArray
+});
 function setupBusinessStore(app) {
-    var store = redux.createStore(counter, window.devToolsExtension && window.devToolsExtension());
+    var store = redux.createStore(reducer, window.devToolsExtension && window.devToolsExtension());
     store.subscribe(function () {
         app.updateAppState("businessData", store.getState());
     });
     return store.dispatch.bind(store);
 }
 var businessActions = {
+    init: function init() {
+        this.businessDispatch({ type: 'INIT' });
+    },
+    storePosts: function storePosts(posts) {
+        this.businessDispatch({ type: 'STORE_POSTS', posts: posts });
+    },
     increment: function increment() {
         this.businessDispatch({ type: 'INCREMENT' });
     },
@@ -424,12 +500,14 @@ mainUI.addChrome("footer", reactChrome(Footer));
 mainUI.setRenderOrder(["header", "**views", "footer"]);
 mainUI.addView("home", reactView(Header$1));
 mainUI.addView("about", reactView(AboutPage));
+mainUI.addView("posts", reactView(PostsPage));
 mainUI.addView("registration", reactView(RegistrationPage));
 mainUI.addView("always404", reactView(Always404Page));
 mainUI.addView("**404", reactView(NotFoundPage));
 mainUI.addView("**offline", reactView(OfflinePage));
 mainUI.addRoute("/", "home");
 mainUI.addRoute("/about", "about");
+mainUI.addRoute("/posts", "posts");
 mainUI.addRoute("/registration", "registration");
 mainUI.addRoute("/always404", "always404");
 app.addUIContext("main", mainUI);
@@ -437,7 +515,10 @@ app.setupLocalisation({
     en: enLang
 });
 app.loadUIContext("main");
-app.initializeAppState("en", 0, {
+app.initializeAppState("en", {
+    counter: 0,
+    postArray: []
+}, {
     title: "Start Title"
 }, {
     showHeader: true,

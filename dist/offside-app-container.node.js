@@ -379,7 +379,7 @@ var FormWarning = function (_Error2) {
 
     return FormWarning;
 }(Error);
-function fieldRequired(value, appState, appActions) {
+function fieldRequired(value, formState, appState, appActions) {
     var l10n = appState.l10n;
     var translate = l10n.translate;
 
@@ -388,7 +388,7 @@ function fieldRequired(value, appState, appActions) {
     }
     return Promise.resolve(true);
 }
-function emailValidate(value, appState, appActions) {
+function emailValidate(value, formState, appState, appActions) {
     var l10n = appState.l10n;
     var translate = l10n.translate;
 
@@ -402,6 +402,12 @@ function emailValidate(value, appState, appActions) {
     }
     return Promise.resolve(true);
 }
+
+(function (FormValidationStyle) {
+    FormValidationStyle[FormValidationStyle["WhileEditing"] = 0] = "WhileEditing";
+    FormValidationStyle[FormValidationStyle["OnBlur"] = 1] = "OnBlur";
+    FormValidationStyle[FormValidationStyle["OnStepEnd"] = 2] = "OnStepEnd";
+})(exports.FormValidationStyle || (exports.FormValidationStyle = {}));
 
 var FormDefinition = function () {
     function FormDefinition(name) {
@@ -430,6 +436,8 @@ var FormDefinition = function () {
             return {
                 formType: formType,
                 formKey: formKey,
+                currentStep: this.stepOrder[0],
+                complete: false,
                 steps: steps
             };
         }
@@ -470,14 +478,10 @@ var FormStepDefinition = function () {
     }]);
     return FormStepDefinition;
 }();
-(function (FormValidationStyle) {
-    FormValidationStyle[FormValidationStyle["WhileEditing"] = 0] = "WhileEditing";
-    FormValidationStyle[FormValidationStyle["OnBlur"] = 1] = "OnBlur";
-    FormValidationStyle[FormValidationStyle["OnStepEnd"] = 2] = "OnStepEnd";
-})(exports.FormValidationStyle || (exports.FormValidationStyle = {}));
 var FormFieldDefinition = function FormFieldDefinition(fieldType) {
     var required = arguments.length <= 1 || arguments[1] === undefined ? true : arguments[1];
     var validationStyle = arguments.length <= 2 || arguments[2] === undefined ? exports.FormValidationStyle.OnStepEnd : arguments[2];
+    var extraValidators = arguments.length <= 3 || arguments[3] === undefined ? [] : arguments[3];
     classCallCheck(this, FormFieldDefinition);
 
     this.fieldType = fieldType;
@@ -490,6 +494,7 @@ var FormFieldDefinition = function FormFieldDefinition(fieldType) {
     if (fieldType === 'email') {
         this.validators.push(emailValidate);
     }
+    this.validators = this.validators.concat(extraValidators);
 };
 
 var FormManager = function () {
@@ -582,7 +587,7 @@ var FormManager = function () {
             var appActor = this.getAppActor();
             console.log("FormManager :: validating " + formKey + "." + stepKey + "." + fieldKey + ":", value);
             return Promise.all(field.validators.map(function (validator) {
-                return validator(value, appState, appActor);
+                return validator(value, startState, appState, appActor);
             })).then(function (results) {
                 var newForms = _this.readyNewState();
                 var formState = lodash.cloneDeep(newForms[formKey]);
@@ -606,13 +611,45 @@ var FormManager = function () {
             });
         }
     }, {
+        key: "submitStep",
+        value: function submitStep(formKey, stepKey) {
+            var _this2 = this;
+
+            var newForms = this.readyNewState();
+            var formState = lodash.cloneDeep(newForms[formKey]);
+            var form = this.formRegistry[formState.formType];
+            var fieldKeys = Object.keys(form.steps[stepKey].fields);
+            return Promise.all(fieldKeys.map(function (fieldKey) {
+                return _this2.validateField(formKey, stepKey, fieldKey);
+            })).then(function (results) {
+                var newForms = _this2.readyNewState();
+                var formState = lodash.cloneDeep(newForms[formKey]);
+                if (results.every(function (r) {
+                    return r === true;
+                })) {
+                    var currentIx = form.stepOrder.indexOf(formState.currentStep);
+                    if (currentIx < form.stepOrder.length - 1) {
+                        formState.currentStep = form.stepOrder[currentIx + 1];
+                    } else {
+                        formState.complete = true;
+                    }
+                    newForms[formKey] = formState;
+                    _this2.updateFormState(newForms);
+                    return Promise.resolve(formState);
+                } else {
+                    return Promise.reject(formState.steps[stepKey].errors);
+                }
+            });
+        }
+    }, {
         key: "actions",
         value: function actions() {
             return {
                 init: this.init.bind(this),
                 updateField: this.updateField.bind(this),
                 blurField: this.blurField.bind(this),
-                validateField: this.validateField.bind(this)
+                validateField: this.validateField.bind(this),
+                submitStep: this.submitStep.bind(this)
             };
         }
     }]);
@@ -1240,3 +1277,5 @@ exports.AppActor = AppActor;
 exports.FormDefinition = FormDefinition;
 exports.FormStepDefinition = FormStepDefinition;
 exports.FormFieldDefinition = FormFieldDefinition;
+exports.FormError = FormError;
+exports.FormWarning = FormWarning;

@@ -8,5 +8,7 @@ export interface FormStepState {
 export interface FormState {
   formType: string
   formKey: string
+  currentStep: string
+  complete: boolean
   steps: {[key: string]: FormStepState}
 }

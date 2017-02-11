@@ -116,6 +116,8 @@ declare module "Forms/FormData" {
     export interface FormState {
         formType: string;
         formKey: string;
+        currentStep: string;
+        complete: boolean;
         steps: {
             [key: string]: FormStepState;
         };
@@ -161,6 +163,7 @@ declare module "AppContainer/DataModel" {
     }
 }
 declare module "Forms/FormValidators" {
+    import { FormState } from "Forms/FormData";
     import { AppState, AppActor } from "AppContainer/DataModel";
     export class FormError extends Error {
         readonly message: string;
@@ -172,12 +175,17 @@ declare module "Forms/FormValidators" {
         name: string;
         constructor(message: string);
     }
-    export function fieldRequired<BusinessData, UIData, BusinessAction, UIAction>(value: any, appState: AppState<BusinessData, UIData>, appActions: AppActor<BusinessData, UIData, BusinessAction, UIAction>): Promise<boolean>;
-    export function emailValidate<BusinessData, UIData, BusinessAction, UIAction>(value: any, appState: AppState<BusinessData, UIData>, appActions: AppActor<BusinessData, UIData, BusinessAction, UIAction>): Promise<boolean>;
+    export function fieldRequired<BusinessData, UIData, BusinessAction, UIAction>(value: any, formState: FormState, appState: AppState<BusinessData, UIData>, appActions: AppActor<BusinessData, UIData, BusinessAction, UIAction>): Promise<boolean>;
+    export function emailValidate<BusinessData, UIData, BusinessAction, UIAction>(value: any, formState: FormState, appState: AppState<BusinessData, UIData>, appActions: AppActor<BusinessData, UIData, BusinessAction, UIAction>): Promise<boolean>;
 }
 declare module "Forms/FormDefinition" {
     import { FormState, FormStepState } from "Forms/FormData";
     import { AppState, AppActor } from "AppContainer/DataModel";
+    export enum FormValidationStyle {
+        WhileEditing = 0,
+        OnBlur = 1,
+        OnStepEnd = 2,
+    }
     export default class FormDefinition<BusinessData, UIData, BusinessAction, UIAction> {
         readonly name: string;
         readonly steps: {
@@ -198,17 +206,12 @@ declare module "Forms/FormDefinition" {
         addField(fieldName: string, field: FormFieldDefinition<BusinessData, UIData, BusinessAction, UIAction>): void;
         getInitState(): FormStepState;
     }
-    export enum FormValidationStyle {
-        WhileEditing = 0,
-        OnBlur = 1,
-        OnStepEnd = 2,
-    }
     export class FormFieldDefinition<BusinessData, UIData, BusinessAction, UIAction> {
         readonly fieldType: string;
         readonly required: boolean;
         readonly validationStyle: FormValidationStyle;
-        readonly validators: Array<(value: any, appState: AppState<BusinessData, UIData>, appActions: AppActor<BusinessData, UIData, BusinessAction, UIAction>) => Promise<boolean>>;
-        constructor(fieldType: string, required?: boolean, validationStyle?: FormValidationStyle);
+        readonly validators: Array<(value: any, formState: FormState, appState: AppState<BusinessData, UIData>, appActions: AppActor<BusinessData, UIData, BusinessAction, UIAction>) => Promise<boolean>>;
+        constructor(fieldType: string, required?: boolean, validationStyle?: FormValidationStyle, extraValidators?: Array<(value: any, formState: FormState, appState: AppState<BusinessData, UIData>, appActions: AppActor<BusinessData, UIData, BusinessAction, UIAction>) => Promise<boolean>>);
     }
 }
 declare module "Forms/FormManager" {
@@ -220,6 +223,7 @@ declare module "Forms/FormManager" {
         updateField: (formKey: string, stepKey: string, fieldKey: string, value: any) => void;
         blurField: (formKey: string, stepKey: string, fieldKey: string) => void;
         validateField: (formKey: string, stepKey: string, fieldKey: string) => Promise<boolean>;
+        submitStep: (formKey: string, stepKey: string) => Promise<boolean>;
     }
     export default class FormManager<BusinessData, UIData, BusinessAction, UIAction> {
         private formRegistry;
@@ -238,6 +242,7 @@ declare module "Forms/FormManager" {
         updateField(formKey: string, stepKey: string, fieldKey: string, value: any): void;
         blurField(formKey: string, stepKey: string, fieldKey: string): void;
         validateField(formKey: string, stepKey: string, fieldKey: string): Promise<boolean>;
+        submitStep(formKey: string, stepKey: string): Promise<boolean>;
         actions(): FormActions;
     }
 }
@@ -331,6 +336,7 @@ declare module "offside-app-container" {
     import Localize from "AppContainer/Localize";
     import CommsChannel, { CommsChannelState } from "Comms/CommsChannel";
     import FormDefinition, { FormStepDefinition, FormFieldDefinition, FormValidationStyle } from "Forms/FormDefinition";
+    import { FormError, FormWarning } from "Forms/FormValidators";
     import FormManager from "Forms/FormManager";
     import { AppState, AppActions, AppActor } from "AppContainer/DataModel";
     import UIContext from "UIEngine/UIContext";
@@ -367,5 +373,5 @@ declare module "offside-app-container" {
         updateAppState(key: string, updateValue: any): void;
         setupRouteListeners(): void;
     }
-    export { UIContext, CommsChannel, Localize, AppState, AppActions, AppActor, FormDefinition, FormStepDefinition, FormFieldDefinition, FormValidationStyle };
+    export { UIContext, CommsChannel, Localize, AppState, AppActions, AppActor, FormDefinition, FormStepDefinition, FormFieldDefinition, FormValidationStyle, FormError, FormWarning };
 }

@@ -3,6 +3,7 @@ import CommsChannel, {CommsChannelState} from './Comms/CommsChannel'
 import FormDefinition, {
   FormStepDefinition, FormFieldDefinition, FormValidationStyle,
 } from './Forms/FormDefinition'
+import {FormError, FormWarning} from './Forms/FormValidators'
 
 import {FormState} from './Forms/FormData'
 import FormManager from './Forms/FormManager'
@@ -221,4 +222,6 @@ export {
   FormStepDefinition,
   FormFieldDefinition,
   FormValidationStyle,
+  FormError,
+  FormWarning,
 }

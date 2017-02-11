@@ -8,6 +8,7 @@ export interface FormActions {
   updateField: (formKey: string, stepKey: string, fieldKey: string, value: any) => void
   blurField: (formKey: string, stepKey: string, fieldKey: string) => void
   validateField: (formKey: string, stepKey: string, fieldKey: string) => Promise<boolean>
+  submitStep: (formKey: string, stepKey: string) => Promise<boolean>
 }
 
 export default class FormManager<
@@ -107,7 +108,7 @@ export default class FormManager<
     console.log(`FormManager :: validating ${formKey}.${stepKey}.${fieldKey}:`, value)
 
     return Promise.all(field.validators.map((validator) => {
-      return validator(value, appState, appActor)
+      return validator(value, startState, appState, appActor)
     })).then((results) => {
       const newForms = this.readyNewState()
       const formState = cloneDeep(newForms[formKey])
@@ -133,12 +134,43 @@ export default class FormManager<
     })
   }
 
+  submitStep (formKey: string, stepKey: string): Promise<boolean> {
+    const newForms = this.readyNewState()
+    const formState = cloneDeep(newForms[formKey])
+    const form = this.formRegistry[formState.formType]
+    const fieldKeys = Object.keys(form.steps[stepKey].fields)
+
+    return Promise.all(fieldKeys.map((fieldKey) => {
+      return this.validateField(formKey, stepKey, fieldKey)
+    })).then((results: any) =>  {
+      const newForms = this.readyNewState()
+      const formState = cloneDeep(newForms[formKey])
+
+      if (results.every((r: any) => r === true)) {
+        const currentIx = form.stepOrder.indexOf(formState.currentStep);
+        if (currentIx < form.stepOrder.length - 1) {
+          formState.currentStep = form.stepOrder[currentIx + 1]
+        } else {
+          formState.complete = true
+        }
+
+        newForms[formKey] = formState
+        this.updateFormState(newForms)
+
+        return Promise.resolve(formState)
+      } else {
+        return Promise.reject(formState.steps[stepKey].errors)
+      }
+    })
+  }
+
   actions (): FormActions {
     return {
       init: this.init.bind(this),
       updateField: this.updateField.bind(this),
       blurField: this.blurField.bind(this),
       validateField: this.validateField.bind(this),
+      submitStep: this.submitStep.bind(this),
     }
   }
 }
