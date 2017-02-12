@@ -7,10 +7,10 @@ export default function reactScreen<AppState, UIScreenData> (
   return {
     createScreen (
       container: Element, state: AppState,
-      appActions: any
-    ) {
+      appActions: any, screenProps: any
+    ): any {
       ReactDOM.render(
-        <ScreenComponent {...state} />,
+        <ScreenComponent {...state} {...screenProps} />,
         container
       )
       return {}
@@ -18,14 +18,14 @@ export default function reactScreen<AppState, UIScreenData> (
 
     updateScreen (
       container: Element, state: AppState,
-      appActions: any
-    ) {
+      appActions: any, screenProps: any
+    ): any {
       ReactDOM.render(
-        <ScreenComponent {...state} />,
+        <ScreenComponent {...state} {...screenProps} />,
         container
       )
       return {}
-    }
+    },
 
     destroyScreen (container: Element, data: any) {
       ReactDOM.unmountComponentAtNode(container)

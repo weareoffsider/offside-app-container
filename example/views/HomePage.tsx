@@ -10,7 +10,6 @@ import DialogScreen from '../screens/DialogScreen'
 
 export default class Header extends React.Component<ExampleAppProps, any> {
   static preLoad (state: ExampleAppState, actions: ExampleAppActions) {
-    console.log("preloading")
     return actions.comms['placeholder'].get("/posts/1")
   }
 

@@ -808,22 +808,32 @@ var ScreenDefinition = function () {
 }();
 
 var Screen = function () {
-    function Screen(container, options) {
+    function Screen(id, container, options, popScreenFunc) {
         classCallCheck(this, Screen);
 
+        this.id = id;
         this.container = container;
         this.options = options;
+        this.screenProps = {
+            screenId: this.id,
+            popScreen: popScreenFunc
+        };
     }
 
     createClass(Screen, [{
+        key: "getId",
+        value: function getId() {
+            return this.id;
+        }
+    }, {
         key: "create",
         value: function create(state, actions) {
-            this.screenData = this.options.createScreen(this.container, state, actions);
+            this.screenData = this.options.createScreen(this.container, state, actions, this.screenProps);
         }
     }, {
         key: "update",
         value: function update(state, actions) {
-            this.screenData = this.options.updateScreen(this.container, state, actions, this.screenData);
+            this.screenData = this.options.updateScreen(this.container, state, actions, this.screenProps, this.screenData);
         }
     }, {
         key: "destroy",
@@ -933,7 +943,9 @@ var UIContext = function () {
         this.viewSet = {};
         this.chromeSet = {};
         this.activeChrome = {};
+        this.nextScreenID = 0;
         this.visibleViews = {};
+        this.screenStack = [];
         this.routeTable = new RouteTable();
     }
 
@@ -953,13 +965,24 @@ var UIContext = function () {
             var screenDef = new ScreenDefinition(screenOptions);
             var screenContainer = document.createElement("div");
             this.screenStackContainer.appendChild(screenContainer);
-            var scrn = new Screen(screenContainer, screenOptions);
+            var screenId = this.nextScreenID++;
+            var scrn = new Screen(screenId, screenContainer, screenOptions, this.popScreen.bind(this, screenId));
+            screenContainer.className = this.contextKey + '-screen ' + this.contextKey + '-screen-' + scrn.getId();
+            this.screenStack.push(scrn);
             scrn.create(this.getLatestAppState(), this.getLatestAppActions());
         }
     }, {
         key: 'popScreen',
-        value: function popScreen() {
-            console.log('pop screen');
+        value: function popScreen(id) {
+            var scrn = this.screenStack.filter(function (s) {
+                return s.getId() === id;
+            })[0];
+            if (!scrn) {
+                console.warn('pop screen, not found:', id);
+            }
+            var scrnIx = this.screenStack.indexOf(scrn);
+            scrn.destroy();
+            this.screenStack.splice(scrnIx, 1);
         }
     }, {
         key: 'screenActions',
@@ -1044,6 +1067,9 @@ var UIContext = function () {
             Object.keys(this.activeChrome).forEach(function (name) {
                 var chrome = _this2.activeChrome[name];
                 chrome.update(state, _this2.chromeState, appActions);
+            });
+            this.screenStack.forEach(function (scrn) {
+                scrn.update(state, appActions);
             });
         }
     }, {

@@ -20,6 +20,8 @@ export default class UIContext<BusinessData, UIData, UIChromeData,
     {[key: string]: Chrome<BusinessData, UIData, UIChromeData, ChromeRenderData>}
   public routeTable: RouteTable
   private viewContainer: Element
+  private nextScreenID: number
+  private screenStack: Array<Screen<BusinessData, UIData, ScreenRenderData>>
   private screenStackContainer: Element
   private visibleViews:
     {[route: string]: View<BusinessData, UIData, UIChromeData, ViewRenderData>}
@@ -39,7 +41,9 @@ export default class UIContext<BusinessData, UIData, UIChromeData,
     this.viewSet = {}
     this.chromeSet = {}
     this.activeChrome = {}
+    this.nextScreenID = 0
     this.visibleViews = {}
+    this.screenStack = []
     this.routeTable = new RouteTable()
   }
 
@@ -64,15 +68,30 @@ export default class UIContext<BusinessData, UIData, UIChromeData,
     const screenContainer = document.createElement("div")
     this.screenStackContainer.appendChild(screenContainer)
 
-    const scrn = new Screen(screenContainer, screenOptions)
+    const screenId = this.nextScreenID++
+    const scrn = new Screen(
+      screenId, screenContainer,
+      screenOptions, this.popScreen.bind(this, screenId)
+    )
+    screenContainer.className = (
+      `${this.contextKey}-screen ${this.contextKey}-screen-${scrn.getId()}`
+    )
+    this.screenStack.push(scrn)
     scrn.create(
       this.getLatestAppState(),
       this.getLatestAppActions()
     )
   }
 
-  popScreen () {
-    console.log('pop screen')
+  popScreen (id: number) {
+    const scrn = this.screenStack.filter((s) => s.getId() === id)[0]
+    if (!scrn) {
+      console.warn('pop screen, not found:', id)
+    }
+
+    const scrnIx = this.screenStack.indexOf(scrn);
+    scrn.destroy()
+    this.screenStack.splice(scrnIx, 1)
   }
 
   screenActions (): any {
@@ -155,6 +174,10 @@ export default class UIContext<BusinessData, UIData, UIChromeData,
     Object.keys(this.activeChrome).forEach((name) => {
       const chrome = this.activeChrome[name]
       chrome.update(state, this.chromeState, appActions)
+    })
+
+    this.screenStack.forEach((scrn) => {
+      scrn.update(state, appActions)
     })
   }
 

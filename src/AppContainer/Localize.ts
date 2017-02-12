@@ -2,6 +2,7 @@ import * as i18next from 'i18next';
 import * as moment from 'moment';
 import * as numeral from 'numeral';
 
+
 export default class LocalizeSpawner {
   constructor (private translationResources: any) {
   }

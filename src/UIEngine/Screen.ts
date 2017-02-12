@@ -1,16 +1,25 @@
 import {AppState, AppActions} from '../AppContainer/DataModel'
 
+interface ScreenProps {
+  screenID: number
+  popScreen: () => void
+}
+
 export interface ScreenOptions<BusinessData, UIData, ScreenRenderData> {
+  renderScreenGuard? (): Element | void
+
   /* Create the view inside the given container */
   createScreen(
     container: Element, state: AppState<BusinessData, UIData>,
-    actions: AppActions<BusinessData, UIData>
+    actions: AppActions<BusinessData, UIData>,
+    screenProps: ScreenProps
   ): ScreenRenderData
 
   /* Send updates to the screen on behalf of this view. */
   updateScreen(
     container: Element, state: AppState<BusinessData, UIData>,
     actions: AppActions<BusinessData, UIData>,
+    screenProps: ScreenProps,
     data?: ScreenRenderData
   ): ScreenRenderData
 
@@ -28,19 +37,28 @@ export default class ScreenDefinition<BusinessData, UIData, ScreenRenderData> {
 
 export class Screen<BusinessData, UIData, ScreenRenderData> {
   private screenData: ScreenRenderData
+  private screenProps: any
 
   constructor (
+    private id: number,
     private container: Element,
-    private options: ScreenOptions<BusinessData, UIData, ScreenRenderData>
+    private options: ScreenOptions<BusinessData, UIData, ScreenRenderData>,
+    popScreenFunc: any
   ) {
+    this.screenProps = {
+      screenId: this.id,
+      popScreen: popScreenFunc,
+    }
   }
+
+  getId (): number { return this.id }
 
   create (
     state: AppState<BusinessData, UIData>,
     actions: AppActions<BusinessData, UIData>
   ) {
     this.screenData = this.options.createScreen(
-      this.container, state, actions
+      this.container, state, actions, this.screenProps
     )
   }
 
@@ -49,7 +67,7 @@ export class Screen<BusinessData, UIData, ScreenRenderData> {
     actions: AppActions<BusinessData, UIData>
   ) {
     this.screenData = this.options.updateScreen(
-      this.container, state, actions, this.screenData
+      this.container, state, actions, this.screenProps, this.screenData
     )
   }
 

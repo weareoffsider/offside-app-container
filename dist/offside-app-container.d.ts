@@ -272,7 +272,7 @@ declare module "UIEngine/Chrome" {
 declare module "UIEngine/Screen" {
     import { AppState, AppActions } from "AppContainer/DataModel";
     export interface ScreenOptions<BusinessData, UIData, ScreenRenderData> {
-        createScreen(container: Element, state: AppState<BusinessData, UIData>, actions: AppActions<BusinessData, UIData>): ScreenRenderData;
+        createScreen(container: Element, state: AppState<BusinessData, UIData>, actions: AppActions<BusinessData, UIData>, screenProps: any): ScreenRenderData;
         updateScreen(container: Element, state: AppState<BusinessData, UIData>, actions: AppActions<BusinessData, UIData>, data?: ScreenRenderData): ScreenRenderData;
         destroyScreen(container: Element, data?: ScreenRenderData): void;
     }
@@ -282,10 +282,13 @@ declare module "UIEngine/Screen" {
         getOptions(): ScreenOptions<BusinessData, UIData, ScreenRenderData>;
     }
     export class Screen<BusinessData, UIData, ScreenRenderData> {
+        private id;
         private container;
         private options;
         private screenData;
-        constructor(container: Element, options: ScreenOptions<BusinessData, UIData, ScreenRenderData>);
+        private screenProps;
+        constructor(id: number, container: Element, options: ScreenOptions<BusinessData, UIData, ScreenRenderData>, popScreenFunc: any);
+        getId(): number;
         create(state: AppState<BusinessData, UIData>, actions: AppActions<BusinessData, UIData>): void;
         update(state: AppState<BusinessData, UIData>, actions: AppActions<BusinessData, UIData>): void;
         destroy(): void;
@@ -334,6 +337,8 @@ declare module "UIEngine/UIContext" {
         private activeChrome;
         routeTable: RouteTable;
         private viewContainer;
+        private nextScreenID;
+        private screenStack;
         private screenStackContainer;
         private visibleViews;
         private activeView;

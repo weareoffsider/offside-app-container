@@ -112,12 +112,12 @@ var __assign = undefined && undefined.__assign || Object.assign || function (t) 
 };
 function reactScreen(ScreenComponent) {
     return {
-        createScreen: function createScreen(container, state, appActions) {
-            ReactDOM.render(React.createElement(ScreenComponent, __assign({}, state)), container);
+        createScreen: function createScreen(container, state, appActions, screenProps) {
+            ReactDOM.render(React.createElement(ScreenComponent, __assign({}, state, screenProps)), container);
             return {};
         },
-        updateScreen: function updateScreen(container, state, appActions) {
-            ReactDOM.render(React.createElement(ScreenComponent, __assign({}, state)), container);
+        updateScreen: function updateScreen(container, state, appActions, screenProps) {
+            ReactDOM.render(React.createElement(ScreenComponent, __assign({}, state, screenProps)), container);
             return {};
         },
         destroyScreen: function destroyScreen(container, data) {
@@ -140,9 +140,11 @@ var DialogScreen = function (_React$Component) {
             var _props = this.props;
             var l10n = _props.l10n;
             var routes = _props.routes;
+            var businessData = _props.businessData;
+            var popScreen = _props.popScreen;
 
             var t_ = l10n.translate;
-            return React.createElement("div", { className: "DialogScreen" }, React.createElement("h2", null, "Some Dialog"), React.createElement("p", null, "Hello everyone."));
+            return React.createElement("div", { className: "DialogScreen" }, React.createElement("h2", null, "Some Dialog"), React.createElement("p", null, "Hello everyone."), React.createElement("span", null, "The counter is ", businessData.counter, "."), React.createElement("a", { onClick: popScreen }, t_('dismiss')));
         }
     }]);
     return DialogScreen;
@@ -182,7 +184,6 @@ var Header$1 = function (_React$Component) {
     }], [{
         key: 'preLoad',
         value: function preLoad(state, actions) {
-            console.log("preloading");
             return actions.comms['placeholder'].get("/posts/1");
         }
     }]);
