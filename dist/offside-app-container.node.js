@@ -808,12 +808,13 @@ var ScreenDefinition = function () {
 }();
 
 var Screen = function () {
-    function Screen(id, container, options, popScreenFunc) {
+    function Screen(id, container, options, popScreenFunc, screenGuard) {
         classCallCheck(this, Screen);
 
         this.id = id;
         this.container = container;
         this.options = options;
+        this.screenGuard = screenGuard;
         this.screenProps = {
             screenId: this.id,
             popScreen: popScreenFunc
@@ -840,6 +841,9 @@ var Screen = function () {
         value: function destroy() {
             this.options.destroyScreen(this.container, this.screenData);
             this.container.parentNode.removeChild(this.container);
+            if (this.screenGuard) {
+                this.screenGuard.parentNode.removeChild(this.screenGuard);
+            }
         }
     }]);
     return Screen;
@@ -962,11 +966,19 @@ var UIContext = function () {
     }, {
         key: 'pushScreen',
         value: function pushScreen(screenOptions) {
+            var guard = void 0;
             var screenDef = new ScreenDefinition(screenOptions);
             var screenContainer = document.createElement("div");
-            this.screenStackContainer.appendChild(screenContainer);
             var screenId = this.nextScreenID++;
-            var scrn = new Screen(screenId, screenContainer, screenOptions, this.popScreen.bind(this, screenId));
+            var popScreenFunc = this.popScreen.bind(this, screenId);
+            if (screenOptions.renderScreenGuard) {
+                guard = screenOptions.renderScreenGuard(popScreenFunc);
+            }
+            if (guard) {
+                this.screenStackContainer.appendChild(guard);
+            }
+            this.screenStackContainer.appendChild(screenContainer);
+            var scrn = new Screen(screenId, screenContainer, screenOptions, popScreenFunc, guard);
             screenContainer.className = this.contextKey + '-screen ' + this.contextKey + '-screen-' + scrn.getId();
             this.screenStack.push(scrn);
             scrn.create(this.getLatestAppState(), this.getLatestAppActions());

@@ -3,6 +3,14 @@ import ReactDOM from "react-dom"
 import {ExampleAppState, UIChromeData} from "../ExampleAppData"
 
 export default class DialogScreen extends React.Component<ExampleAppState, any> {
+  static renderScreenGuard (popFunc) {
+    const screenGuard = document.createElement("div")
+    screenGuard.classList.add('UIScreenGuard')
+    screenGuard.addEventListener('click', popFunc)
+    screenGuard.textContent = 'this is the screen guard'
+    return screenGuard
+  }
+
   render () {
     const {l10n, routes, businessData, popScreen} = this.props
     const t_ = l10n.translate

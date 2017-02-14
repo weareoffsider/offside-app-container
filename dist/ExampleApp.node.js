@@ -112,6 +112,7 @@ var __assign = undefined && undefined.__assign || Object.assign || function (t) 
 };
 function reactScreen(ScreenComponent) {
     return {
+        renderScreenGuard: ScreenComponent.renderScreenGuard,
         createScreen: function createScreen(container, state, appActions, screenProps) {
             ReactDOM.render(React.createElement(ScreenComponent, __assign({}, state, screenProps)), container);
             return {};
@@ -145,6 +146,15 @@ var DialogScreen = function (_React$Component) {
 
             var t_ = l10n.translate;
             return React.createElement("div", { className: "DialogScreen" }, React.createElement("h2", null, "Some Dialog"), React.createElement("p", null, "Hello everyone."), React.createElement("span", null, "The counter is ", businessData.counter, "."), React.createElement("a", { onClick: popScreen }, t_('dismiss')));
+        }
+    }], [{
+        key: "renderScreenGuard",
+        value: function renderScreenGuard(popFunc) {
+            var screenGuard = document.createElement("div");
+            screenGuard.classList.add('UIScreenGuard');
+            screenGuard.addEventListener('click', popFunc);
+            screenGuard.textContent = 'this is the screen guard';
+            return screenGuard;
         }
     }]);
     return DialogScreen;

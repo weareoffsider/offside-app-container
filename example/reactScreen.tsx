@@ -5,6 +5,7 @@ export default function reactScreen<AppState, UIScreenData> (
   ScreenComponent: any
 ) {
   return {
+    renderScreenGuard: ScreenComponent.renderScreenGuard,
     createScreen (
       container: Element, state: AppState,
       appActions: any, screenProps: any

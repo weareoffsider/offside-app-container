@@ -6,7 +6,7 @@ interface ScreenProps {
 }
 
 export interface ScreenOptions<BusinessData, UIData, ScreenRenderData> {
-  renderScreenGuard? (): Element | void
+  renderScreenGuard? (popScreenFunc: any): Element | void
 
   /* Create the view inside the given container */
   createScreen(
@@ -43,7 +43,8 @@ export class Screen<BusinessData, UIData, ScreenRenderData> {
     private id: number,
     private container: Element,
     private options: ScreenOptions<BusinessData, UIData, ScreenRenderData>,
-    popScreenFunc: any
+    popScreenFunc: any,
+    private screenGuard?: Element | void
   ) {
     this.screenProps = {
       screenId: this.id,
@@ -75,5 +76,8 @@ export class Screen<BusinessData, UIData, ScreenRenderData> {
   ) {
     this.options.destroyScreen(this.container, this.screenData)
     this.container.parentNode.removeChild(this.container)
+    if (this.screenGuard) {
+      this.screenGuard.parentNode.removeChild(this.screenGuard)
+    }
   }
 }

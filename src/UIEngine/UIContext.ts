@@ -64,14 +64,24 @@ export default class UIContext<BusinessData, UIData, UIChromeData,
   pushScreen (
     screenOptions: ScreenOptions<BusinessData, UIData, ScreenRenderData>
   ) {
+    let guard: Element | void
     const screenDef = new ScreenDefinition(screenOptions)
     const screenContainer = document.createElement("div")
+    const screenId = this.nextScreenID++
+    const popScreenFunc = this.popScreen.bind(this, screenId)
+
+    if (screenOptions.renderScreenGuard) {
+      guard = screenOptions.renderScreenGuard(popScreenFunc)
+    }
+    if (guard) {
+      this.screenStackContainer.appendChild(guard)
+    }
+
     this.screenStackContainer.appendChild(screenContainer)
 
-    const screenId = this.nextScreenID++
     const scrn = new Screen(
       screenId, screenContainer,
-      screenOptions, this.popScreen.bind(this, screenId)
+      screenOptions, popScreenFunc, guard
     )
     screenContainer.className = (
       `${this.contextKey}-screen ${this.contextKey}-screen-${scrn.getId()}`
