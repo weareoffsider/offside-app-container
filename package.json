@@ -1,6 +1,6 @@
 {
   "name": "offsider-app-container",
-  "version": "0.1.0",
+  "version": "0.0.1",
   "description": "Container System for Single Page Applications",
   "typings": "./typings/index.d.ts",
   "main": "index.js",
