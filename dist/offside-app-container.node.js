@@ -1393,6 +1393,23 @@ var OffsideAppContainer = function () {
     return OffsideAppContainer;
 }();
 
+var OffsideAppContainerObject = {
+    OffsideAppContainer: OffsideAppContainer,
+    UIContext: UIContext,
+    CommsChannel: CommsChannel,
+    Localize: LocalizeSpawner,
+    AppActor: AppActor,
+    FormDefinition: FormDefinition,
+    FormStepDefinition: FormStepDefinition,
+    FormFieldDefinition: FormFieldDefinition,
+    FormValidationStyle: exports.FormValidationStyle,
+    FormError: FormError,
+    FormWarning: FormWarning
+};
+if (typeof window !== "undefined") {
+    window['OffsideAppContainer'] = OffsideAppContainerObject;
+}
+
 exports['default'] = OffsideAppContainer;
 exports.UIContext = UIContext;
 exports.CommsChannel = CommsChannel;

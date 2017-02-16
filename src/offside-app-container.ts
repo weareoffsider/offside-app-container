@@ -217,6 +217,20 @@ export default class OffsideAppContainer<
   }
 }
 
+const OffsideAppContainerObject = {
+  OffsideAppContainer,
+  UIContext,
+  CommsChannel,
+  Localize,
+  AppActor,
+  FormDefinition,
+  FormStepDefinition,
+  FormFieldDefinition,
+  FormValidationStyle,
+  FormError,
+  FormWarning,
+}
+
 export {
   UIContext,
   CommsChannel,
@@ -230,4 +244,9 @@ export {
   FormValidationStyle,
   FormError,
   FormWarning,
+}
+
+
+if (typeof window !== "undefined") {
+  (window as any)['OffsideAppContainer'] = OffsideAppContainerObject
 }
