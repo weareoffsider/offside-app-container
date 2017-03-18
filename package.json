@@ -1,8 +1,8 @@
 {
   "name": "offsider-app-container",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Container System for Single Page Applications",
-  "typings": "./typings/index.d.ts",
+  "typings": "./dist/offside-app-container.d.ts",
   "main": "./dist/offside-app-container.node.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
