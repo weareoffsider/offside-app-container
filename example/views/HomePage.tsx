@@ -26,6 +26,7 @@ export default class Header extends React.Component<ExampleAppProps, any> {
 
   render () {
     const {l10n, routes, businessData, actions} = this.props
+    console.log(actions)
     const t_ = l10n.translate
 
     return <section className="HomePage">

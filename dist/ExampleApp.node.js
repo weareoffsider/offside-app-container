@@ -188,6 +188,7 @@ var Header$1 = function (_React$Component) {
             var businessData = _props.businessData;
             var actions = _props.actions;
 
+            console.log(actions);
             var t_ = l10n.translate;
             return React.createElement("section", { className: "HomePage" }, React.createElement("h1", null, "App Body in Heyah"), React.createElement("button", { onClick: actions.ui.swapTitle }, t_('swap_title')), React.createElement("h3", null, "Counter"), React.createElement("button", { onClick: actions.business.decrement }, "-"), React.createElement("span", null, businessData.counter), React.createElement("button", { onClick: actions.business.increment }, "+"), React.createElement("br", null), React.createElement("a", { onClick: this.showDialog }, t_('show_dialog')), React.createElement("br", null), React.createElement("a", { href: routes.getPath('about') }, t_('about')), React.createElement("br", null), React.createElement("a", { href: routes.getPath('registration') }, t_('registration')));
         }
