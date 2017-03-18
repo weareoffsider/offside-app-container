@@ -271,9 +271,14 @@ declare module "UIEngine/Chrome" {
 }
 declare module "UIEngine/Screen" {
     import { AppState, AppActions } from "AppContainer/DataModel";
+    export interface ScreenProps {
+        screenID: number;
+        popScreen: () => void;
+    }
     export interface ScreenOptions<BusinessData, UIData, ScreenRenderData> {
-        createScreen(container: Element, state: AppState<BusinessData, UIData>, actions: AppActions<BusinessData, UIData>, screenProps: any): ScreenRenderData;
-        updateScreen(container: Element, state: AppState<BusinessData, UIData>, actions: AppActions<BusinessData, UIData>, data?: ScreenRenderData): ScreenRenderData;
+        renderScreenGuard?(popScreenFunc: any): Element | void;
+        createScreen(container: Element, state: AppState<BusinessData, UIData>, actions: AppActions<BusinessData, UIData>, screenProps: ScreenProps): ScreenRenderData;
+        updateScreen(container: Element, state: AppState<BusinessData, UIData>, actions: AppActions<BusinessData, UIData>, screenProps: ScreenProps, data?: ScreenRenderData): ScreenRenderData;
         destroyScreen(container: Element, data?: ScreenRenderData): void;
     }
     export default class ScreenDefinition<BusinessData, UIData, ScreenRenderData> {
@@ -285,9 +290,10 @@ declare module "UIEngine/Screen" {
         private id;
         private container;
         private options;
+        private screenGuard;
         private screenData;
         private screenProps;
-        constructor(id: number, container: Element, options: ScreenOptions<BusinessData, UIData, ScreenRenderData>, popScreenFunc: any);
+        constructor(id: number, container: Element, options: ScreenOptions<BusinessData, UIData, ScreenRenderData>, popScreenFunc: any, screenGuard?: Element | void);
         getId(): number;
         create(state: AppState<BusinessData, UIData>, actions: AppActions<BusinessData, UIData>): void;
         update(state: AppState<BusinessData, UIData>, actions: AppActions<BusinessData, UIData>): void;
@@ -352,7 +358,7 @@ declare module "UIEngine/UIContext" {
         addView(key: string, viewOptions: ViewOptions<BusinessData, UIData, UIChromeData, ViewRenderData>): void;
         addChrome(key: string, chromeOptions: ChromeOptions<BusinessData, UIData, UIChromeData, ChromeRenderData>): void;
         pushScreen(screenOptions: ScreenOptions<BusinessData, UIData, ScreenRenderData>): void;
-        popScreen(): void;
+        popScreen(id: number): void;
         screenActions(): any;
         addRoute(routePath: string, viewName: string, routeName?: string): void;
         getMatchFromRoute(path: string): RouteMatcher;
@@ -368,7 +374,7 @@ declare module "UIEngine/UIContext" {
         transitionViews(entering: View<BusinessData, UIData, UIChromeData, ViewRenderData>, loadingPromise: Promise<any>, exiting?: View<BusinessData, UIData, UIChromeData, ViewRenderData>): void;
     }
 }
-declare module "offside-app-container" {
+declare module "offsider-app-container" {
     import Localize from "AppContainer/Localize";
     import CommsChannel, { CommsChannelState } from "Comms/CommsChannel";
     import FormDefinition, { FormStepDefinition, FormFieldDefinition, FormValidationStyle } from "Forms/FormDefinition";

@@ -36,12 +36,12 @@ gulp.task("definitions", function () {
 
 gulp.task("rollup", function() {
   return rollup({
-    entry: "./build/offside-app-container.js",
+    entry: "./build/offsider-app-container.js",
     format: "cjs",
     plugins: [json(), babel()],
     exports: 'named',
   })
-  .pipe(source("offside-app-container.node.js"))
+  .pipe(source("offsider-app-container.node.js"))
   .pipe(gulp.dest("./dist"))
   .pipe(using())
 })
@@ -89,19 +89,19 @@ gulp.task("example:webpack", function () {
           filename: "ExampleApp.pkg.js",
         },
         externals: [{
-          "offside-app-container": "OffsideAppContainer",
+          "offsider-app-container": "OffsideAppContainer",
         }],
       }))
       .pipe(gulp.dest('build-web/'))
       .pipe(connect.reload())
       .pipe(using()),
 
-    gulp.src("./dist/offside-app-container.node.js")
+    gulp.src("./dist/offsider-app-container.node.js")
       .pipe(webpack({
         output: {
           filename: "ExampleAppDependencies.pkg.js",
           libraryTarget: "var",
-          library: "OffsideAppContainer",
+          library: "OffsiderAppContainer",
         },
         module: {
           loaders: [{
@@ -127,7 +127,7 @@ gulp.task("default", [
   gulp.watch("example/**/*.json", ["example:json"])
   gulp.watch("build/**/*.{js,json}", ["rollup", "example:rollup"])
   gulp.watch("build/example/ExampleApp.node.js", ["example:webpack"])
-  gulp.watch("dist/offside-app-container.node.js", ["example:webpack"])
+  gulp.watch("dist/offsider-app-container.node.js", ["example:webpack"])
 
   gulp.start(["example:scripts", "example:rollup"])
 

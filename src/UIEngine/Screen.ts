@@ -1,6 +1,6 @@
 import {AppState, AppActions} from '../AppContainer/DataModel'
 
-interface ScreenProps {
+export interface ScreenProps {
   screenID: number
   popScreen: () => void
 }

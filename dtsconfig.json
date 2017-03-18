@@ -6,7 +6,7 @@
     "diagnostics": true,
     "moduleResolution": "node",
     "module": "system",
-    "outFile": "offside-app-container.js",
+    "outFile": "offsider-app-container.js",
     "allowSyntheticDefaultImports": true,
     "target": "es6"
   },
