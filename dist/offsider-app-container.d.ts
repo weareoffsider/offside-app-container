@@ -44,6 +44,8 @@ declare module "Comms/Errors" {
 declare module "Comms/CommsChannel" {
     export interface CommsActions {
         get: (url: string) => Promise<any>;
+        post: (url: string, data?: any) => Promise<any>;
+        put: (url: string, data?: any) => Promise<any>;
     }
     export enum CommsChannelStatus {
         Offline = 0,

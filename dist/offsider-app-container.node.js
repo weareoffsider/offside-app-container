@@ -422,7 +422,9 @@ var CommsChannel = function () {
         key: "actions",
         value: function actions() {
             return {
-                get: this.get.bind(this)
+                get: this.get.bind(this),
+                post: this.post.bind(this),
+                put: this.put.bind(this)
             };
         }
     }]);

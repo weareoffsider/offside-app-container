@@ -5,6 +5,8 @@ import {
 
 export interface CommsActions {
   get: (url: string) => Promise<any>
+  post: (url: string, data?: any) => Promise<any>
+  put: (url: string, data?: any) => Promise<any>
 }
 
 
@@ -245,6 +247,8 @@ export default class CommsChannel<CommData> {
   actions (): CommsActions {
     return {
       get: this.get.bind(this),
+      post: this.post.bind(this),
+      put: this.put.bind(this),
     }
   }
 }
