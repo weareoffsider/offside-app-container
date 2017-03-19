@@ -1436,7 +1436,6 @@ var OffsideAppContainer = function () {
                 nextState.businessData = updateValue;
             }
             this.appState = nextState;
-            console.log("App Update", nextState);
             this.activeUI.update(nextState, this.appActions);
         }
     }, {
