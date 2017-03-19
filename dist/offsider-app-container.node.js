@@ -950,7 +950,7 @@ var UIContext = function () {
         this.nextScreenID = 0;
         this.visibleViews = {};
         this.screenStack = [];
-        this.routeTable = new RouteTable();
+        this.routeTable = new RouteTable(urlBase);
     }
 
     createClass(UIContext, [{
