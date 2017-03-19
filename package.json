@@ -1,6 +1,6 @@
 {
   "name": "offsider-app-container",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "Container System for Single Page Applications",
   "typings": "./dist/offsider-app-container.d.ts",
   "main": "./dist/offsider-app-container.node.js",
@@ -9,7 +9,6 @@
   },
   "author": "Offsider Software",
   "license": "MIT",
-  "typings": "./typings/index.d.ts",
   "dependencies": {
     "gulp-typescript": "^2.14.1",
     "i18next": "^3.4.1",
