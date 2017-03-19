@@ -44,7 +44,7 @@ export default class UIContext<BusinessData, UIData, UIChromeData,
     this.nextScreenID = 0
     this.visibleViews = {}
     this.screenStack = []
-    this.routeTable = new RouteTable()
+    this.routeTable = new RouteTable(urlBase)
   }
 
   addView (
