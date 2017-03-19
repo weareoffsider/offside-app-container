@@ -1,7 +1,7 @@
 import {
   FormDefinition, FormStepDefinition, FormFieldDefinition,
   FormValidationStyle, FormError,
-} from "offside-app-container"
+} from "offsider-app-container"
 import React from "react"
 import ReactDOM from "react-dom"
 import {

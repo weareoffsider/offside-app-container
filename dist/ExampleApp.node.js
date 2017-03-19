@@ -4,7 +4,7 @@ Object.defineProperty(exports, '__esModule', { value: true });
 
 function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
 
-var OffsideAppContainer = require('offside-app-container');
+var OffsideAppContainer = require('offsider-app-container');
 var OffsideAppContainer__default = _interopDefault(OffsideAppContainer);
 var React = _interopDefault(require('react'));
 var ReactDOM = _interopDefault(require('react-dom'));

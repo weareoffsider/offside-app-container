@@ -1,5 +1,5 @@
 import {createStore} from 'redux'
-import OffsideAppContainer from "offside-app-container"
+import OffsideAppContainer from "offsider-app-container"
 
 import {BusinessData, UIData, UIChromeData, ExampleAppActor} from "./ExampleAppData"
 

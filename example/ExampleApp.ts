@@ -1,6 +1,6 @@
 /// <reference path="../dist/offside-app-container.d.ts" />
 
-import OffsideAppContainer, {UIContext, CommsChannel} from "offside-app-container"
+import OffsideAppContainer, {UIContext, CommsChannel} from "offsider-app-container"
 import Header from "./chrome/Header"
 import Footer from "./chrome/Footer"
 import HomePage from "./views/HomePage"

@@ -77,6 +77,8 @@ declare module "Comms/CommsChannel" {
         setStateSetter(func: (name: string, state: CommsChannelState) => void): void;
         getState(): CommsChannelState;
         updateRequestState(key: number, request: CommsChannelRequest): void;
+        post(url: string, data: any): Promise<any>;
+        put(url: string, data: any): Promise<any>;
         get(url: string): Promise<any>;
         actions(): CommsActions;
     }

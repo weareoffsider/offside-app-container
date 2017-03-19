@@ -304,14 +304,14 @@ var CommsChannel = function () {
             this.updateCommsState(this.name, this.state);
         }
     }, {
-        key: "get",
-        value: function get(url) {
+        key: "post",
+        value: function post(url, data) {
             var _this = this;
 
             var key = this.nextRequestKey++;
-            var method = 'GET';
+            var method = 'POST';
             return new Promise(function (resolve, reject) {
-                console.log("comms :: " + _this.name + " :: get - " + url);
+                console.log("comms :: " + _this.name + " :: post - " + url);
                 var req = new XMLHttpRequest();
                 _this.updateRequestState(key, { url: url, method: method, progress: 0 });
                 req.addEventListener("load", function () {
@@ -333,8 +333,88 @@ var CommsChannel = function () {
                         progress: 1, result: result });
                     reject(result);
                 }, false);
-                req.open("GET", "" + _this.urlRoot + url);
+                req.open("POST", "" + _this.urlRoot + url, true);
                 _this.prepareRequest(req, _this.commData);
+                if (data) {
+                    req.setRequestHeader("content-type", "application/json");
+                    req.send(JSON.stringify(data));
+                } else {
+                    req.send();
+                }
+            });
+        }
+    }, {
+        key: "put",
+        value: function put(url, data) {
+            var _this2 = this;
+
+            var key = this.nextRequestKey++;
+            var method = 'PUT';
+            return new Promise(function (resolve, reject) {
+                console.log("comms :: " + _this2.name + " :: put - " + url);
+                var req = new XMLHttpRequest();
+                _this2.updateRequestState(key, { url: url, method: method, progress: 0 });
+                req.addEventListener("load", function () {
+                    if (req.status >= 400) {
+                        var result = _this2.processError(req, _this2.commData);
+                        _this2.updateRequestState(key, { url: url, method: method, status: req.status,
+                            progress: 1, result: result });
+                        reject(result);
+                    } else {
+                        var _result2 = _this2.processSuccess(req, _this2.commData);
+                        _this2.updateRequestState(key, { url: url, method: method, status: req.status,
+                            progress: 1, result: _result2 });
+                        resolve(_result2);
+                    }
+                }, false);
+                req.addEventListener("error", function () {
+                    var result = _this2.processError(req, _this2.commData);
+                    _this2.updateRequestState(key, { url: url, method: method, status: 0,
+                        progress: 1, result: result });
+                    reject(result);
+                }, false);
+                req.open("PUT", "" + _this2.urlRoot + url, true);
+                _this2.prepareRequest(req, _this2.commData);
+                if (data) {
+                    req.setRequestHeader("content-type", "application/json");
+                    req.send(JSON.stringify(data));
+                } else {
+                    req.send();
+                }
+            });
+        }
+    }, {
+        key: "get",
+        value: function get(url) {
+            var _this3 = this;
+
+            var key = this.nextRequestKey++;
+            var method = 'GET';
+            return new Promise(function (resolve, reject) {
+                console.log("comms :: " + _this3.name + " :: get - " + url);
+                var req = new XMLHttpRequest();
+                _this3.updateRequestState(key, { url: url, method: method, progress: 0 });
+                req.addEventListener("load", function () {
+                    if (req.status >= 400) {
+                        var result = _this3.processError(req, _this3.commData);
+                        _this3.updateRequestState(key, { url: url, method: method, status: req.status,
+                            progress: 1, result: result });
+                        reject(result);
+                    } else {
+                        var _result3 = _this3.processSuccess(req, _this3.commData);
+                        _this3.updateRequestState(key, { url: url, method: method, status: req.status,
+                            progress: 1, result: _result3 });
+                        resolve(_result3);
+                    }
+                }, false);
+                req.addEventListener("error", function () {
+                    var result = _this3.processError(req, _this3.commData);
+                    _this3.updateRequestState(key, { url: url, method: method, status: 0,
+                        progress: 1, result: result });
+                    reject(result);
+                }, false);
+                req.open("GET", "" + _this3.urlRoot + url);
+                _this3.prepareRequest(req, _this3.commData);
                 req.send();
             });
         }

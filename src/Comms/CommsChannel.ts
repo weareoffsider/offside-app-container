@@ -119,6 +119,92 @@ export default class CommsChannel<CommData> {
     this.updateCommsState(this.name, this.state)
   }
 
+  post(url: string, data: any): Promise<any> {
+    const key = this.nextRequestKey++
+    const method = 'POST'
+
+    return new Promise((resolve, reject) => {
+      console.log(`comms :: ${this.name} :: post - ${url}`)
+      var req = new XMLHttpRequest();
+      this.updateRequestState(key, {url, method, progress: 0})
+
+      req.addEventListener("load", () => {
+        if (req.status >= 400) {
+          const result = this.processError(req, this.commData);
+          this.updateRequestState(key, {url, method, status: req.status,
+                                        progress: 1, result})
+          reject(result)
+        } else {
+          const result = this.processSuccess(req, this.commData);
+          this.updateRequestState(key, {url, method, status: req.status,
+                                        progress: 1, result})
+          resolve(result)
+        }
+      }, false)
+      req.addEventListener("error", () => {
+        const result = this.processError(req, this.commData);
+        this.updateRequestState(key, {url, method, status: 0,
+                                      progress: 1, result})
+
+        reject(result)
+      }, false)
+
+      req.open("POST", `${this.urlRoot}${url}`, true)
+
+      this.prepareRequest(req, this.commData)
+
+      if (data) {
+        req.setRequestHeader("content-type", "application/json")
+        req.send(JSON.stringify(data))
+      } else {
+        req.send()
+      }
+    })
+  }
+
+  put(url: string, data: any): Promise<any> {
+    const key = this.nextRequestKey++
+    const method = 'PUT'
+
+    return new Promise((resolve, reject) => {
+      console.log(`comms :: ${this.name} :: put - ${url}`)
+      var req = new XMLHttpRequest();
+      this.updateRequestState(key, {url, method, progress: 0})
+
+      req.addEventListener("load", () => {
+        if (req.status >= 400) {
+          const result = this.processError(req, this.commData);
+          this.updateRequestState(key, {url, method, status: req.status,
+                                        progress: 1, result})
+          reject(result)
+        } else {
+          const result = this.processSuccess(req, this.commData);
+          this.updateRequestState(key, {url, method, status: req.status,
+                                        progress: 1, result})
+          resolve(result)
+        }
+      }, false)
+      req.addEventListener("error", () => {
+        const result = this.processError(req, this.commData);
+        this.updateRequestState(key, {url, method, status: 0,
+                                      progress: 1, result})
+
+        reject(result)
+      }, false)
+
+      req.open("PUT", `${this.urlRoot}${url}`, true)
+
+      this.prepareRequest(req, this.commData)
+
+      if (data) {
+        req.setRequestHeader("content-type", "application/json")
+        req.send(JSON.stringify(data))
+      } else {
+        req.send()
+      }
+    })
+  }
+
   get (url: string): Promise<any> {
     const key = this.nextRequestKey++
     const method = 'GET'

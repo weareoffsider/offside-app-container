@@ -1,4 +1,4 @@
-import {AppState, AppActions, AppActor} from 'offside-app-container'
+import {AppState, AppActions, AppActor} from 'offsider-app-container'
 
 export type BusinessData = Number
 
