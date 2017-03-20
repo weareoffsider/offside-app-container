@@ -423,6 +423,7 @@ declare module "offsider-app-container" {
         updateCommsState(key: string, state: CommsChannelState): void;
         updateAppState(key: string, updateValue: any): void;
         setupRouteListeners(): void;
+        goToRoute(path: string): void;
     }
     export { UIContext, CommsChannel, Localize, AppState, AppActions, AppActor, FormDefinition, FormStepDefinition, FormFieldDefinition, FormValidationStyle, FormError, FormWarning };
 }

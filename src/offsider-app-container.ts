@@ -41,6 +41,9 @@ export default class OffsideAppContainer<
       business: {},
       forms: this.formManager.actions(),
       comms: {},
+      routes: {
+        goTo: this.goToRoute.bind(this),
+      },
     }
   }
 
@@ -212,6 +215,14 @@ export default class OffsideAppContainer<
     window.onpageshow = (event) => {
       const path = window.location.pathname
       const route = this.activeUI.getMatchFromRoute(path)
+      this.updateAppState("route", route)
+    }
+  }
+
+  goToRoute (path: string) {
+    if (window.location.pathname != path) {
+      const route = this.activeUI.getMatchFromRoute(path)
+      window.history.pushState(null, "", path)
       this.updateAppState("route", route)
     }
   }

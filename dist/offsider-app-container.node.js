@@ -1284,7 +1284,10 @@ var OffsideAppContainer = function () {
             ui: {},
             business: {},
             forms: this.formManager.actions(),
-            comms: {}
+            comms: {},
+            routes: {
+                goTo: this.goToRoute.bind(this)
+            }
         };
     }
 
@@ -1479,6 +1482,15 @@ var OffsideAppContainer = function () {
                 var route = _this4.activeUI.getMatchFromRoute(path);
                 _this4.updateAppState("route", route);
             };
+        }
+    }, {
+        key: 'goToRoute',
+        value: function goToRoute(path) {
+            if (window.location.pathname != path) {
+                var route = this.activeUI.getMatchFromRoute(path);
+                window.history.pushState(null, "", path);
+                this.updateAppState("route", route);
+            }
         }
     }]);
     return OffsideAppContainer;
