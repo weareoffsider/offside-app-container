@@ -46,6 +46,7 @@ export default class RouteTable {
 export class RouteMatcher {
   public routeMatcher: any
   public viewName: string
+  public params: any
   public routeName: string
   public path: string
 
@@ -57,11 +58,12 @@ export class RouteMatcher {
     }
   }
 
-  attachPath (path: string) {
+  attachPath (path: string, urlBase: string = "") {
     const matcher = new RouteMatcher()
     matcher.routeMatcher = this.routeMatcher
     matcher.viewName = this.viewName
     matcher.routeName = this.routeName
+    matcher.params = this.routeMatcher.match(path.replace(urlBase, ""))
     matcher.path = path
     return matcher
   }

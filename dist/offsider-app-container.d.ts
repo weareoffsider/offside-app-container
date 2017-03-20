@@ -97,10 +97,11 @@ declare module "UIEngine/RouteTable" {
     export class RouteMatcher {
         routeMatcher: any;
         viewName: string;
+        params: any;
         routeName: string;
         path: string;
         constructor(route?: string, viewName?: string, routeName?: string);
-        attachPath(path: string): RouteMatcher;
+        attachPath(path: string, urlBase?: string): RouteMatcher;
         match(path: string): boolean;
         reverse(params?: any): string;
     }
@@ -348,6 +349,7 @@ declare module "UIEngine/UIContext" {
         private chromeSet;
         private activeChrome;
         routeTable: RouteTable;
+        urlBase: string;
         private viewContainer;
         private nextScreenID;
         private screenStack;

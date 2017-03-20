@@ -1006,10 +1006,13 @@ var RouteMatcher = function () {
     createClass(RouteMatcher, [{
         key: "attachPath",
         value: function attachPath(path) {
+            var urlBase = arguments.length <= 1 || arguments[1] === undefined ? "" : arguments[1];
+
             var matcher = new RouteMatcher();
             matcher.routeMatcher = this.routeMatcher;
             matcher.viewName = this.viewName;
             matcher.routeName = this.routeName;
+            matcher.params = this.routeMatcher.match(path.replace(urlBase, ""));
             matcher.path = path;
             return matcher;
         }
@@ -1037,6 +1040,7 @@ var UIContext = function () {
         this.nextScreenID = 0;
         this.visibleViews = {};
         this.screenStack = [];
+        this.urlBase = urlBase;
         this.routeTable = new RouteTable(urlBase);
     }
 
@@ -1100,7 +1104,7 @@ var UIContext = function () {
         key: 'getMatchFromRoute',
         value: function getMatchFromRoute(path) {
             var match = this.routeTable.matchPath(path);
-            return match ? match.attachPath(path) : null;
+            return match ? match.attachPath(path, this.urlBase) : null;
         }
     }, {
         key: 'setRenderOrder',

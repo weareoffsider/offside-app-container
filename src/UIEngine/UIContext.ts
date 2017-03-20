@@ -19,6 +19,7 @@ export default class UIContext<BusinessData, UIData, UIChromeData,
   private activeChrome:
     {[key: string]: Chrome<BusinessData, UIData, UIChromeData, ChromeRenderData>}
   public routeTable: RouteTable
+  public urlBase: string
   private viewContainer: Element
   private nextScreenID: number
   private screenStack: Array<Screen<BusinessData, UIData, ScreenRenderData>>
@@ -44,6 +45,7 @@ export default class UIContext<BusinessData, UIData, UIChromeData,
     this.nextScreenID = 0
     this.visibleViews = {}
     this.screenStack = []
+    this.urlBase = urlBase
     this.routeTable = new RouteTable(urlBase)
   }
 
@@ -117,7 +119,7 @@ export default class UIContext<BusinessData, UIData, UIChromeData,
 
   getMatchFromRoute (path: string): RouteMatcher {
     const match = this.routeTable.matchPath(path)
-    return match ? match.attachPath(path) : null
+    return match ? match.attachPath(path, this.urlBase) : null
   }
 
   setRenderOrder (newOrder: Array<string>) { this.renderOrder = newOrder }
