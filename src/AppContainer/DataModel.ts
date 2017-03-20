@@ -25,11 +25,16 @@ export interface AppActions<BusinessData, UIData> {
 
 export class AppActor<BusinessData, UIData, BusinessAction, UIAction> {
   public getAppState: () => AppState<BusinessData, UIData>
+  public getAppActions: () => AppActions<BusinessData, UIData>
   public businessDispatch: (a: BusinessAction) => void
   public uiDispatch: (a: UIAction) => void
 
   setStateGetter(func: () => AppState<BusinessData, UIData>) {
     this.getAppState = func
+  }
+
+  setActionsGetter(func: () => AppActions<BusinessData, UIData>) {
+    this.getAppActions = func
   }
 
   setBusinessDispatch(func: (a: BusinessAction) => void) {

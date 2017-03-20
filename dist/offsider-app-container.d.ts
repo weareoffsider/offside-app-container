@@ -157,9 +157,11 @@ declare module "AppContainer/DataModel" {
     }
     export class AppActor<BusinessData, UIData, BusinessAction, UIAction> {
         getAppState: () => AppState<BusinessData, UIData>;
+        getAppActions: () => AppActions<BusinessData, UIData>;
         businessDispatch: (a: BusinessAction) => void;
         uiDispatch: (a: UIAction) => void;
         setStateGetter(func: () => AppState<BusinessData, UIData>): void;
+        setActionsGetter(func: () => AppActions<BusinessData, UIData>): void;
         setBusinessDispatch(func: (a: BusinessAction) => void): void;
         setUiDispatch(func: (a: UIAction) => void): void;
     }

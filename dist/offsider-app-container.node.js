@@ -749,6 +749,11 @@ var AppActor = function () {
             this.getAppState = func;
         }
     }, {
+        key: "setActionsGetter",
+        value: function setActionsGetter(func) {
+            this.getAppActions = func;
+        }
+    }, {
         key: "setBusinessDispatch",
         value: function setBusinessDispatch(func) {
             this.businessDispatch = func;
@@ -1270,6 +1275,7 @@ var OffsideAppContainer = function () {
         this.formManager.setStateUpdater(this.updateAppState.bind(this, "forms"));
         this.appActor = new AppActor();
         this.appActor.setStateGetter(this.getState.bind(this));
+        this.appActor.setActionsGetter(this.getActions.bind(this));
         this.appActions = {
             ui: {},
             business: {},

@@ -35,6 +35,7 @@ export default class OffsideAppContainer<
 
     this.appActor = new AppActor<BusinessData, UIData, BusinessAction, UIAction>()
     this.appActor.setStateGetter(this.getState.bind(this))
+    this.appActor.setActionsGetter(this.getActions.bind(this))
     this.appActions = {
       ui: {},
       business: {},
