@@ -2,10 +2,12 @@ import {
   RequestServerError, RequestOfflineError,
   RequestForbiddenError, RequestNotFoundError
 } from './Errors'
+import {forOwn} from 'lodash'
 
 export interface CommsActions {
   get: (url: string) => Promise<any>
   post: (url: string, data?: any) => Promise<any>
+  upload: (url: string, data?: any) => Promise<any>
   put: (url: string, data?: any) => Promise<any>
 }
 
@@ -164,6 +166,52 @@ export default class CommsChannel<CommData> {
     })
   }
 
+  upload(url: string, data: any, method: string = "POST"): Promise<any> {
+    const key = this.nextRequestKey++
+
+    return new Promise((resolve, reject) => {
+      console.log(`comms :: ${this.name} :: upload via ${method} - ${url}`)
+
+      var form = new FormData()
+      forOwn(data, (val, key) => {
+        form.append(key, val);
+      })
+      var req = new XMLHttpRequest();
+      this.updateRequestState(key, {url, method, progress: 0})
+
+      req.addEventListener("load", () => {
+        if (req.status >= 400) {
+          const result = this.processError(req, this.commData);
+          this.updateRequestState(key, {url, method, status: req.status,
+                                        progress: 1, result})
+          reject(result)
+        } else {
+          const result = this.processSuccess(req, this.commData);
+          this.updateRequestState(key, {url, method, status: req.status,
+                                        progress: 1, result})
+          resolve(result)
+        }
+      }, false)
+      req.addEventListener("error", () => {
+        const result = this.processError(req, this.commData);
+        this.updateRequestState(key, {url, method, status: 0,
+                                      progress: 1, result})
+
+        reject(result)
+      }, false)
+
+      req.open(method, `${this.urlRoot}${url}`, true)
+
+      this.prepareRequest(req, this.commData)
+
+      if (form) {
+        req.send(form)
+      } else {
+        req.send()
+      }
+    })
+  }
+
   put(url: string, data: any): Promise<any> {
     const key = this.nextRequestKey++
     const method = 'PUT'
@@ -249,6 +297,7 @@ export default class CommsChannel<CommData> {
       get: this.get.bind(this),
       post: this.post.bind(this),
       put: this.put.bind(this),
+      upload: this.upload.bind(this),
     }
   }
 }

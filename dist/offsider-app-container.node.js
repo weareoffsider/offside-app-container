@@ -259,17 +259,17 @@ var CommsChannel = function () {
     }
 
     createClass(CommsChannel, [{
-        key: "setStateSetter",
+        key: 'setStateSetter',
         value: function setStateSetter(func) {
             this.updateCommsState = func;
         }
     }, {
-        key: "getState",
+        key: 'getState',
         value: function getState() {
             return this.state;
         }
     }, {
-        key: "updateRequestState",
+        key: 'updateRequestState',
         value: function updateRequestState(key, request) {
             var nextRequests = this.state.requests.slice();
             var status = void 0;
@@ -304,14 +304,14 @@ var CommsChannel = function () {
             this.updateCommsState(this.name, this.state);
         }
     }, {
-        key: "post",
+        key: 'post',
         value: function post(url, data) {
             var _this = this;
 
             var key = this.nextRequestKey++;
             var method = 'POST';
             return new Promise(function (resolve, reject) {
-                console.log("comms :: " + _this.name + " :: post - " + url);
+                console.log('comms :: ' + _this.name + ' :: post - ' + url);
                 var req = new XMLHttpRequest();
                 _this.updateRequestState(key, { url: url, method: method, progress: 0 });
                 req.addEventListener("load", function () {
@@ -333,7 +333,7 @@ var CommsChannel = function () {
                         progress: 1, result: result });
                     reject(result);
                 }, false);
-                req.open("POST", "" + _this.urlRoot + url, true);
+                req.open("POST", '' + _this.urlRoot + url, true);
                 _this.prepareRequest(req, _this.commData);
                 if (data) {
                     req.setRequestHeader("content-type", "application/json");
@@ -344,14 +344,19 @@ var CommsChannel = function () {
             });
         }
     }, {
-        key: "put",
-        value: function put(url, data) {
+        key: 'upload',
+        value: function upload(url, data) {
             var _this2 = this;
 
+            var method = arguments.length <= 2 || arguments[2] === undefined ? "POST" : arguments[2];
+
             var key = this.nextRequestKey++;
-            var method = 'PUT';
             return new Promise(function (resolve, reject) {
-                console.log("comms :: " + _this2.name + " :: put - " + url);
+                console.log('comms :: ' + _this2.name + ' :: upload via ' + method + ' - ' + url);
+                var form = new FormData();
+                lodash.forOwn(data, function (val, key) {
+                    form.append(key, val);
+                });
                 var req = new XMLHttpRequest();
                 _this2.updateRequestState(key, { url: url, method: method, progress: 0 });
                 req.addEventListener("load", function () {
@@ -373,25 +378,24 @@ var CommsChannel = function () {
                         progress: 1, result: result });
                     reject(result);
                 }, false);
-                req.open("PUT", "" + _this2.urlRoot + url, true);
+                req.open(method, '' + _this2.urlRoot + url, true);
                 _this2.prepareRequest(req, _this2.commData);
-                if (data) {
-                    req.setRequestHeader("content-type", "application/json");
-                    req.send(JSON.stringify(data));
+                if (form) {
+                    req.send(form);
                 } else {
                     req.send();
                 }
             });
         }
     }, {
-        key: "get",
-        value: function get(url) {
+        key: 'put',
+        value: function put(url, data) {
             var _this3 = this;
 
             var key = this.nextRequestKey++;
-            var method = 'GET';
+            var method = 'PUT';
             return new Promise(function (resolve, reject) {
-                console.log("comms :: " + _this3.name + " :: get - " + url);
+                console.log('comms :: ' + _this3.name + ' :: put - ' + url);
                 var req = new XMLHttpRequest();
                 _this3.updateRequestState(key, { url: url, method: method, progress: 0 });
                 req.addEventListener("load", function () {
@@ -413,18 +417,59 @@ var CommsChannel = function () {
                         progress: 1, result: result });
                     reject(result);
                 }, false);
-                req.open("GET", "" + _this3.urlRoot + url);
+                req.open("PUT", '' + _this3.urlRoot + url, true);
                 _this3.prepareRequest(req, _this3.commData);
+                if (data) {
+                    req.setRequestHeader("content-type", "application/json");
+                    req.send(JSON.stringify(data));
+                } else {
+                    req.send();
+                }
+            });
+        }
+    }, {
+        key: 'get',
+        value: function get(url) {
+            var _this4 = this;
+
+            var key = this.nextRequestKey++;
+            var method = 'GET';
+            return new Promise(function (resolve, reject) {
+                console.log('comms :: ' + _this4.name + ' :: get - ' + url);
+                var req = new XMLHttpRequest();
+                _this4.updateRequestState(key, { url: url, method: method, progress: 0 });
+                req.addEventListener("load", function () {
+                    if (req.status >= 400) {
+                        var result = _this4.processError(req, _this4.commData);
+                        _this4.updateRequestState(key, { url: url, method: method, status: req.status,
+                            progress: 1, result: result });
+                        reject(result);
+                    } else {
+                        var _result4 = _this4.processSuccess(req, _this4.commData);
+                        _this4.updateRequestState(key, { url: url, method: method, status: req.status,
+                            progress: 1, result: _result4 });
+                        resolve(_result4);
+                    }
+                }, false);
+                req.addEventListener("error", function () {
+                    var result = _this4.processError(req, _this4.commData);
+                    _this4.updateRequestState(key, { url: url, method: method, status: 0,
+                        progress: 1, result: result });
+                    reject(result);
+                }, false);
+                req.open("GET", '' + _this4.urlRoot + url);
+                _this4.prepareRequest(req, _this4.commData);
                 req.send();
             });
         }
     }, {
-        key: "actions",
+        key: 'actions',
         value: function actions() {
             return {
                 get: this.get.bind(this),
                 post: this.post.bind(this),
-                put: this.put.bind(this)
+                put: this.put.bind(this),
+                upload: this.upload.bind(this)
             };
         }
     }]);
