@@ -45,6 +45,7 @@ declare module "Comms/CommsChannel" {
     export interface CommsActions {
         get: (url: string) => Promise<any>;
         post: (url: string, data?: any) => Promise<any>;
+        delete: (url: string, data?: any) => Promise<any>;
         upload: (url: string, data?: any) => Promise<any>;
         put: (url: string, data?: any) => Promise<any>;
     }
@@ -83,6 +84,7 @@ declare module "Comms/CommsChannel" {
         post(url: string, data: any): Promise<any>;
         upload(url: string, data: any, method?: string): Promise<any>;
         put(url: string, data: any): Promise<any>;
+        delete(url: string, data: any): Promise<any>;
         get(url: string): Promise<any>;
         actions(): CommsActions;
     }

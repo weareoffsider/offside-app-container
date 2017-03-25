@@ -428,14 +428,14 @@ var CommsChannel = function () {
             });
         }
     }, {
-        key: 'get',
-        value: function get(url) {
+        key: 'delete',
+        value: function _delete(url, data) {
             var _this4 = this;
 
             var key = this.nextRequestKey++;
-            var method = 'GET';
+            var method = 'DELETE';
             return new Promise(function (resolve, reject) {
-                console.log('comms :: ' + _this4.name + ' :: get - ' + url);
+                console.log('comms :: ' + _this4.name + ' :: delete - ' + url);
                 var req = new XMLHttpRequest();
                 _this4.updateRequestState(key, { url: url, method: method, progress: 0 });
                 req.addEventListener("load", function () {
@@ -457,8 +457,48 @@ var CommsChannel = function () {
                         progress: 1, result: result });
                     reject(result);
                 }, false);
-                req.open("GET", '' + _this4.urlRoot + url);
+                req.open("DELETE", '' + _this4.urlRoot + url, true);
                 _this4.prepareRequest(req, _this4.commData);
+                if (data) {
+                    req.setRequestHeader("content-type", "application/json");
+                    req.send(JSON.stringify(data));
+                } else {
+                    req.send();
+                }
+            });
+        }
+    }, {
+        key: 'get',
+        value: function get(url) {
+            var _this5 = this;
+
+            var key = this.nextRequestKey++;
+            var method = 'GET';
+            return new Promise(function (resolve, reject) {
+                console.log('comms :: ' + _this5.name + ' :: get - ' + url);
+                var req = new XMLHttpRequest();
+                _this5.updateRequestState(key, { url: url, method: method, progress: 0 });
+                req.addEventListener("load", function () {
+                    if (req.status >= 400) {
+                        var result = _this5.processError(req, _this5.commData);
+                        _this5.updateRequestState(key, { url: url, method: method, status: req.status,
+                            progress: 1, result: result });
+                        reject(result);
+                    } else {
+                        var _result5 = _this5.processSuccess(req, _this5.commData);
+                        _this5.updateRequestState(key, { url: url, method: method, status: req.status,
+                            progress: 1, result: _result5 });
+                        resolve(_result5);
+                    }
+                }, false);
+                req.addEventListener("error", function () {
+                    var result = _this5.processError(req, _this5.commData);
+                    _this5.updateRequestState(key, { url: url, method: method, status: 0,
+                        progress: 1, result: result });
+                    reject(result);
+                }, false);
+                req.open("GET", '' + _this5.urlRoot + url);
+                _this5.prepareRequest(req, _this5.commData);
                 req.send();
             });
         }
@@ -469,7 +509,8 @@ var CommsChannel = function () {
                 get: this.get.bind(this),
                 post: this.post.bind(this),
                 put: this.put.bind(this),
-                upload: this.upload.bind(this)
+                upload: this.upload.bind(this),
+                delete: this.delete.bind(this)
             };
         }
     }]);
