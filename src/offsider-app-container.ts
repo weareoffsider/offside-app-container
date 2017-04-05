@@ -196,13 +196,20 @@ export default class OffsideAppContainer<
         target = target.parentNode as Element
       }
 
-      if (target && target.getAttribute("href")) {
+      if (
+        target &&
+        target.getAttribute("href") &&
+        !target.getAttribute("download") &&
+        !target.getAttribute("target")
+      ) {
         const path = target.getAttribute("href")
         if (path.indexOf("http") === 0) { return }
-        e.preventDefault()
         const route = this.activeUI.getMatchFromRoute(path)
-        window.history.pushState(null, "", path)
-        this.updateAppState("route", route)
+        if (route) {
+          e.preventDefault()
+          window.history.pushState(null, "", path)
+          this.updateAppState("route", route)
+        }
       }
     })
 

@@ -1547,15 +1547,17 @@ var OffsideAppContainer = function () {
                 while (target && target.tagName !== 'A') {
                     target = target.parentNode;
                 }
-                if (target && target.getAttribute("href")) {
+                if (target && target.getAttribute("href") && !target.getAttribute("download") && !target.getAttribute("target")) {
                     var path = target.getAttribute("href");
                     if (path.indexOf("http") === 0) {
                         return;
                     }
-                    e.preventDefault();
                     var route = _this4.activeUI.getMatchFromRoute(path);
-                    window.history.pushState(null, "", path);
-                    _this4.updateAppState("route", route);
+                    if (route) {
+                        e.preventDefault();
+                        window.history.pushState(null, "", path);
+                        _this4.updateAppState("route", route);
+                    }
                 }
             });
             window.onpopstate = function (event) {
