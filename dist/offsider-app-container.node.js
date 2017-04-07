@@ -665,6 +665,100 @@ var FormFieldDefinition = function FormFieldDefinition(fieldType) {
     this.validators = this.validators.concat(extraValidators);
 };
 
+/* RouteTable
+ *
+ * A class for managing a set of path routes in the UI Context. View names
+ * must correlate to Views in this UI Context's ViewSet.
+ */
+
+var RouteTable = function () {
+    function RouteTable() {
+        var routeBase = arguments.length <= 0 || arguments[0] === undefined ? "" : arguments[0];
+        classCallCheck(this, RouteTable);
+
+        this.routeBase = routeBase;
+        this.routes = [];
+    }
+    // add a route to the set, they are parsed in sequence so higher
+    // priority routes should be added first
+
+
+    createClass(RouteTable, [{
+        key: "addRoute",
+        value: function addRoute(routePath, viewName, routeName) {
+            var route = new RouteMatcher(routePath, viewName, routeName);
+            this.routes.push(route);
+        }
+        // take a path and match it to a route, otherwise returning null
+
+    }, {
+        key: "matchPath",
+        value: function matchPath(fullPath) {
+            var scopedPath = fullPath.replace(this.routeBase, "");
+            var match = this.routes.find(function (route) {
+                return route.match(scopedPath);
+            });
+            return match ? match : null;
+        }
+        // get a path from a provided routeName and parameters
+
+    }, {
+        key: "getPath",
+        value: function getPath(routeName, params) {
+            if (!params) {
+                params = {};
+            }
+            var route = this.routes.find(function (route) {
+                return route.routeName == routeName;
+            });
+            if (route) {
+                return "" + this.routeBase + route.reverse(params);
+            } else {
+                return "/route-not-found";
+            }
+        }
+    }]);
+    return RouteTable;
+}();
+
+var RouteMatcher = function () {
+    function RouteMatcher(route, viewName, routeName) {
+        classCallCheck(this, RouteMatcher);
+
+        if (route && viewName) {
+            this.routeMatcher = new Route(route);
+            this.viewName = viewName;
+            this.routeName = routeName ? routeName : viewName;
+        }
+    }
+
+    createClass(RouteMatcher, [{
+        key: "attachPath",
+        value: function attachPath(path) {
+            var urlBase = arguments.length <= 1 || arguments[1] === undefined ? "" : arguments[1];
+
+            var matcher = new RouteMatcher();
+            matcher.routeMatcher = this.routeMatcher;
+            matcher.viewName = this.viewName;
+            matcher.routeName = this.routeName;
+            matcher.params = this.routeMatcher.match(path.replace(urlBase, ""));
+            matcher.path = path;
+            return matcher;
+        }
+    }, {
+        key: "match",
+        value: function match(path) {
+            return this.routeMatcher.match(path);
+        }
+    }, {
+        key: "reverse",
+        value: function reverse(params) {
+            return this.routeMatcher.reverse(params);
+        }
+    }]);
+    return RouteMatcher;
+}();
+
 var FormManager = function () {
     function FormManager() {
         classCallCheck(this, FormManager);
@@ -1020,100 +1114,6 @@ var Screen = function () {
         }
     }]);
     return Screen;
-}();
-
-/* RouteTable
- *
- * A class for managing a set of path routes in the UI Context. View names
- * must correlate to Views in this UI Context's ViewSet.
- */
-
-var RouteTable = function () {
-    function RouteTable() {
-        var routeBase = arguments.length <= 0 || arguments[0] === undefined ? "" : arguments[0];
-        classCallCheck(this, RouteTable);
-
-        this.routeBase = routeBase;
-        this.routes = [];
-    }
-    // add a route to the set, they are parsed in sequence so higher
-    // priority routes should be added first
-
-
-    createClass(RouteTable, [{
-        key: "addRoute",
-        value: function addRoute(routePath, viewName, routeName) {
-            var route = new RouteMatcher(routePath, viewName, routeName);
-            this.routes.push(route);
-        }
-        // take a path and match it to a route, otherwise returning null
-
-    }, {
-        key: "matchPath",
-        value: function matchPath(fullPath) {
-            var scopedPath = fullPath.replace(this.routeBase, "");
-            var match = this.routes.find(function (route) {
-                return route.match(scopedPath);
-            });
-            return match ? match : null;
-        }
-        // get a path from a provided routeName and parameters
-
-    }, {
-        key: "getPath",
-        value: function getPath(routeName, params) {
-            if (!params) {
-                params = {};
-            }
-            var route = this.routes.find(function (route) {
-                return route.routeName == routeName;
-            });
-            if (route) {
-                return "" + this.routeBase + route.reverse(params);
-            } else {
-                return "/route-not-found";
-            }
-        }
-    }]);
-    return RouteTable;
-}();
-
-var RouteMatcher = function () {
-    function RouteMatcher(route, viewName, routeName) {
-        classCallCheck(this, RouteMatcher);
-
-        if (route && viewName) {
-            this.routeMatcher = new Route(route);
-            this.viewName = viewName;
-            this.routeName = routeName ? routeName : viewName;
-        }
-    }
-
-    createClass(RouteMatcher, [{
-        key: "attachPath",
-        value: function attachPath(path) {
-            var urlBase = arguments.length <= 1 || arguments[1] === undefined ? "" : arguments[1];
-
-            var matcher = new RouteMatcher();
-            matcher.routeMatcher = this.routeMatcher;
-            matcher.viewName = this.viewName;
-            matcher.routeName = this.routeName;
-            matcher.params = this.routeMatcher.match(path.replace(urlBase, ""));
-            matcher.path = path;
-            return matcher;
-        }
-    }, {
-        key: "match",
-        value: function match(path) {
-            return this.routeMatcher.match(path);
-        }
-    }, {
-        key: "reverse",
-        value: function reverse(params) {
-            return this.routeMatcher.reverse(params);
-        }
-    }]);
-    return RouteMatcher;
 }();
 
 var UIContext = function () {
@@ -1595,7 +1595,9 @@ var OffsideAppContainerObject = {
     FormFieldDefinition: FormFieldDefinition,
     FormValidationStyle: exports.FormValidationStyle,
     FormError: FormError,
-    FormWarning: FormWarning
+    FormWarning: FormWarning,
+    RouteTable: RouteTable,
+    RouteMatcher: RouteMatcher
 };
 if (typeof window !== "undefined") {
     window['OffsideAppContainer'] = OffsideAppContainerObject;
@@ -1611,3 +1613,5 @@ exports.FormStepDefinition = FormStepDefinition;
 exports.FormFieldDefinition = FormFieldDefinition;
 exports.FormError = FormError;
 exports.FormWarning = FormWarning;
+exports.RouteTable = RouteTable;
+exports.RouteMatcher = RouteMatcher;

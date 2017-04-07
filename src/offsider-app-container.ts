@@ -5,6 +5,7 @@ import FormDefinition, {
 } from './Forms/FormDefinition'
 import {FormError, FormWarning} from './Forms/FormValidators'
 
+import RouteTable, {RouteMatcher} from './UIEngine/RouteTable'
 import {FormState} from './Forms/FormData'
 import FormManager from './Forms/FormManager'
 import {AppState, AppActions, AppActor} from './AppContainer/DataModel'
@@ -247,6 +248,8 @@ const OffsideAppContainerObject = {
   FormValidationStyle,
   FormError,
   FormWarning,
+  RouteTable,
+  RouteMatcher,
 }
 
 export {
@@ -262,6 +265,8 @@ export {
   FormValidationStyle,
   FormError,
   FormWarning,
+  RouteTable,
+  RouteMatcher,
 }
 
 

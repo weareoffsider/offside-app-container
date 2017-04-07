@@ -89,6 +89,27 @@ declare module "Comms/CommsChannel" {
         actions(): CommsActions;
     }
 }
+declare module "UIEngine/RouteTable" {
+    export default class RouteTable {
+        routeBase: string;
+        routes: Array<RouteMatcher>;
+        constructor(routeBase?: string);
+        addRoute(routePath: string, viewName: string, routeName?: string): void;
+        matchPath(fullPath: string): RouteMatcher;
+        getPath(routeName: string, params?: any): string;
+    }
+    export class RouteMatcher {
+        routeMatcher: any;
+        viewName: string;
+        params: any;
+        routeName: string;
+        path: string;
+        constructor(route?: string, viewName?: string, routeName?: string);
+        attachPath(path: string, urlBase?: string): RouteMatcher;
+        match(path: string): boolean;
+        reverse(params?: any): string;
+    }
+}
 declare module "Forms/FormData" {
     export interface FormStepState {
         data: {
@@ -109,27 +130,6 @@ declare module "Forms/FormData" {
         steps: {
             [key: string]: FormStepState;
         };
-    }
-}
-declare module "UIEngine/RouteTable" {
-    export default class RouteTable {
-        routeBase: string;
-        routes: Array<RouteMatcher>;
-        constructor(routeBase?: string);
-        addRoute(routePath: string, viewName: string, routeName?: string): void;
-        matchPath(fullPath: string): RouteMatcher;
-        getPath(routeName: string, params?: any): string;
-    }
-    export class RouteMatcher {
-        routeMatcher: any;
-        viewName: string;
-        params: any;
-        routeName: string;
-        path: string;
-        constructor(route?: string, viewName?: string, routeName?: string);
-        attachPath(path: string, urlBase?: string): RouteMatcher;
-        match(path: string): boolean;
-        reverse(params?: any): string;
     }
 }
 declare module "AppContainer/DataModel" {
@@ -258,36 +258,6 @@ declare module "Forms/FormManager" {
         actions(): FormActions;
     }
 }
-declare module "UIEngine/View" {
-    import { AppState, AppActions } from "AppContainer/DataModel";
-    import { RouteMatcher } from "UIEngine/RouteTable";
-    export interface ViewOptions<BusinessData, UIData, UIChromeData, ViewRenderData> {
-        preLoad?(state: AppState<BusinessData, UIData>, actions: AppActions<BusinessData, UIData>): Promise<any>;
-        postLoad?(state: AppState<BusinessData, UIData>, actions: AppActions<BusinessData, UIData>): Promise<any>;
-        createView(container: Element, state: AppState<BusinessData, UIData>, actions: AppActions<BusinessData, UIData>): ViewRenderData;
-        updateChrome?(state: AppState<BusinessData, UIData>, chromeData: UIChromeData, data?: ViewRenderData): UIChromeData;
-        updateView(container: Element, state: AppState<BusinessData, UIData>, actions: AppActions<BusinessData, UIData>, data: ViewRenderData): ViewRenderData;
-        destroyView(container: Element, data?: ViewRenderData): void;
-    }
-    export default class ViewDefinition<BusinessData, UIData, UIChromeData, ViewRenderData> {
-        private options;
-        constructor(options: ViewOptions<BusinessData, UIData, UIChromeData, ViewRenderData>);
-        spawnView(container: Element, route: RouteMatcher): View<BusinessData, UIData, UIChromeData, ViewRenderData>;
-    }
-    export class View<BusinessData, UIData, UIChromeData, ViewRenderData> {
-        container: Element;
-        route: RouteMatcher;
-        private options;
-        private viewData;
-        private loaded;
-        constructor(container: Element, route: RouteMatcher, options: ViewOptions<BusinessData, UIData, UIChromeData, ViewRenderData>);
-        preLoadData(state: AppState<BusinessData, UIData>, actions: AppActions<BusinessData, UIData>): Promise<any>;
-        postLoadData(state: AppState<BusinessData, UIData>, actions: AppActions<BusinessData, UIData>): Promise<any>;
-        create(state: AppState<BusinessData, UIData>, chromeData: UIChromeData, actions: AppActions<BusinessData, UIData>): UIChromeData;
-        update(state: AppState<BusinessData, UIData>, chromeData: UIChromeData, actions: AppActions<BusinessData, UIData>): UIChromeData;
-        destroy(): void;
-    }
-}
 declare module "UIEngine/Chrome" {
     import { AppState, AppActions } from "AppContainer/DataModel";
     export interface ChromeOptions<BusinessData, UIData, UIChromeData, ChromeRenderData> {
@@ -341,6 +311,36 @@ declare module "UIEngine/Screen" {
         destroy(): void;
     }
 }
+declare module "UIEngine/View" {
+    import { AppState, AppActions } from "AppContainer/DataModel";
+    import { RouteMatcher } from "UIEngine/RouteTable";
+    export interface ViewOptions<BusinessData, UIData, UIChromeData, ViewRenderData> {
+        preLoad?(state: AppState<BusinessData, UIData>, actions: AppActions<BusinessData, UIData>): Promise<any>;
+        postLoad?(state: AppState<BusinessData, UIData>, actions: AppActions<BusinessData, UIData>): Promise<any>;
+        createView(container: Element, state: AppState<BusinessData, UIData>, actions: AppActions<BusinessData, UIData>): ViewRenderData;
+        updateChrome?(state: AppState<BusinessData, UIData>, chromeData: UIChromeData, data?: ViewRenderData): UIChromeData;
+        updateView(container: Element, state: AppState<BusinessData, UIData>, actions: AppActions<BusinessData, UIData>, data: ViewRenderData): ViewRenderData;
+        destroyView(container: Element, data?: ViewRenderData): void;
+    }
+    export default class ViewDefinition<BusinessData, UIData, UIChromeData, ViewRenderData> {
+        private options;
+        constructor(options: ViewOptions<BusinessData, UIData, UIChromeData, ViewRenderData>);
+        spawnView(container: Element, route: RouteMatcher): View<BusinessData, UIData, UIChromeData, ViewRenderData>;
+    }
+    export class View<BusinessData, UIData, UIChromeData, ViewRenderData> {
+        container: Element;
+        route: RouteMatcher;
+        private options;
+        private viewData;
+        private loaded;
+        constructor(container: Element, route: RouteMatcher, options: ViewOptions<BusinessData, UIData, UIChromeData, ViewRenderData>);
+        preLoadData(state: AppState<BusinessData, UIData>, actions: AppActions<BusinessData, UIData>): Promise<any>;
+        postLoadData(state: AppState<BusinessData, UIData>, actions: AppActions<BusinessData, UIData>): Promise<any>;
+        create(state: AppState<BusinessData, UIData>, chromeData: UIChromeData, actions: AppActions<BusinessData, UIData>): UIChromeData;
+        update(state: AppState<BusinessData, UIData>, chromeData: UIChromeData, actions: AppActions<BusinessData, UIData>): UIChromeData;
+        destroy(): void;
+    }
+}
 declare module "UIEngine/UIContext" {
     import { ViewOptions, View } from "UIEngine/View";
     import { ChromeOptions } from "UIEngine/Chrome";
@@ -391,6 +391,7 @@ declare module "offsider-app-container" {
     import CommsChannel, { CommsChannelState } from "Comms/CommsChannel";
     import FormDefinition, { FormStepDefinition, FormFieldDefinition, FormValidationStyle } from "Forms/FormDefinition";
     import { FormError, FormWarning } from "Forms/FormValidators";
+    import RouteTable, { RouteMatcher } from "UIEngine/RouteTable";
     import FormManager from "Forms/FormManager";
     import { AppState, AppActions, AppActor } from "AppContainer/DataModel";
     import UIContext from "UIEngine/UIContext";
@@ -429,5 +430,5 @@ declare module "offsider-app-container" {
         setupRouteListeners(): void;
         goToRoute(path: string): void;
     }
-    export { UIContext, CommsChannel, Localize, AppState, AppActions, AppActor, FormDefinition, FormStepDefinition, FormFieldDefinition, FormValidationStyle, FormError, FormWarning };
+    export { UIContext, CommsChannel, Localize, AppState, AppActions, AppActor, FormDefinition, FormStepDefinition, FormFieldDefinition, FormValidationStyle, FormError, FormWarning, RouteTable, RouteMatcher };
 }
