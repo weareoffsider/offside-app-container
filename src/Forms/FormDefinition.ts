@@ -31,15 +31,15 @@ export default class FormDefinition<
     this.stepOrder.push(stepName)
   }
 
-  getInitState (formType: string, formKey: string): FormState {
+  getInitState (): FormState {
     const steps: {[key: string]: FormStepState} = {}
     this.stepOrder.forEach((stepKey: string) => {
       steps[stepKey] = this.steps[stepKey].getInitState()
     })
 
     return {
-      formType,
-      formKey,
+      // formType,
+      // formKey,
       currentStep: this.stepOrder[0],
       complete: false,
       steps,

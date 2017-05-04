@@ -4,8 +4,7 @@ Object.defineProperty(exports, '__esModule', { value: true });
 
 function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
 
-var OffsideAppContainer = require('offsider-app-container');
-var OffsideAppContainer__default = _interopDefault(OffsideAppContainer);
+var offsiderAppContainer = require('offsider-app-container');
 var React = _interopDefault(require('react'));
 var ReactDOM = _interopDefault(require('react-dom'));
 var redux = require('redux');
@@ -263,7 +262,6 @@ var PostsPage = function (_React$Component) {
     return PostsPage;
 }(React.Component);
 
-var FORM_KEY = "registration";
 var STEP_KEY = "default";
 
 var RegistrationPage = function (_React$Component) {
@@ -274,9 +272,13 @@ var RegistrationPage = function (_React$Component) {
 
         var _this = possibleConstructorReturn(this, (RegistrationPage.__proto__ || Object.getPrototypeOf(RegistrationPage)).call(this, props, context));
 
+        _this._form = new offsiderAppContainer.FormInstance(RegistrationForm, {}, function (newFormData) {
+            _this.setState({ formData: newFormData });
+        });
         _this.updateField = _this.updateField.bind(_this);
         _this.blurField = _this.blurField.bind(_this);
         _this.submitForm = _this.submitForm.bind(_this);
+        _this.state = { formData: _this._form.formData };
         return _this;
     }
 
@@ -285,14 +287,14 @@ var RegistrationPage = function (_React$Component) {
         value: function updateField(e) {
             var actions = this.props.actions;
 
-            actions.forms.updateField(FORM_KEY, STEP_KEY, e.target.name, e.target.value);
+            this._form.updateField(STEP_KEY, e.target.name, e.target.value);
         }
     }, {
         key: "blurField",
         value: function blurField(e) {
             var actions = this.props.actions;
 
-            actions.forms.blurField(FORM_KEY, STEP_KEY, e.target.name);
+            this._form.blurField(STEP_KEY, e.target.name);
         }
     }, {
         key: "submitForm",
@@ -300,7 +302,7 @@ var RegistrationPage = function (_React$Component) {
             e.preventDefault();
             var actions = this.props.actions;
 
-            actions.forms.submitStep(FORM_KEY, STEP_KEY).then(function (data) {
+            this._form.submitStep(STEP_KEY).then(function (data) {
                 console.log(data, 'submit form');
             }, function (errors) {
                 console.log(errors, 'error');
@@ -316,37 +318,45 @@ var RegistrationPage = function (_React$Component) {
             var businessData = _props.businessData;
             var actions = _props.actions;
 
-            var formData = forms[FORM_KEY].steps[STEP_KEY].data;
-            var errorData = forms[FORM_KEY].steps[STEP_KEY].errors;
-            var warnData = forms[FORM_KEY].steps[STEP_KEY].warnings;
+            var form = this.state.formData;
+            var formData = form.steps[STEP_KEY].data;
+            var errorData = form.steps[STEP_KEY].errors;
+            var warnData = form.steps[STEP_KEY].warnings;
             var t_ = l10n.translate;
             console.log(errorData);
-            return React.createElement("form", { onSubmit: this.submitForm, className: "HomePage" }, React.createElement("h1", null, t_('registration')), React.createElement("label", { htmlFor: "username" }, t_("username"), " ", React.createElement("br", null), React.createElement("input", { onChange: this.updateField, onBlur: this.blurField, id: "username", name: "username", value: formData.username }), errorData.username.length > 0 && React.createElement("p", { className: "error" }, errorData.username.join(' '))), React.createElement("br", null), React.createElement("br", null), React.createElement("label", { htmlFor: "email" }, t_("email"), " ", React.createElement("br", null), React.createElement("input", { onChange: this.updateField, onBlur: this.blurField, id: "email", type: "email", name: "email", value: formData.email }), errorData.email.length > 0 && React.createElement("p", { className: "error" }, errorData.email.join(' '))), React.createElement("br", null), React.createElement("br", null), React.createElement("label", { htmlFor: "password" }, t_("password"), " ", React.createElement("br", null), React.createElement("input", { onChange: this.updateField, onBlur: this.blurField, id: "password", type: "password", name: "password", value: formData.password }), errorData.password.length > 0 && React.createElement("p", { className: "error" }, errorData.password.join(' '))), React.createElement("br", null), React.createElement("br", null), React.createElement("label", { htmlFor: "magicword" }, t_("magicword"), " ", React.createElement("br", null), React.createElement("input", { onChange: this.updateField, onBlur: this.blurField, id: "magicword", type: "text", name: "magicword", value: formData.magicword }), errorData.magicword.length > 0 && React.createElement("p", { className: "error" }, errorData.magicword.join(' '))), React.createElement("br", null), React.createElement("br", null), React.createElement("button", { type: "submit" }, t_('submit_user')));
+            return React.createElement("form", { onSubmit: this.submitForm, className: "HomePage" }, React.createElement("h1", null, t_('registration')), React.createElement("label", { htmlFor: "username" }, t_("username"), " ", React.createElement("br", null), React.createElement("input", { onChange: this.updateField, onBlur: this.blurField, id: "username", name: "username", value: formData.username }), errorData.username.length > 0 && React.createElement("p", { className: "error" }, errorData.username.map(function (e) {
+                return t_('form_validation.' + e);
+            }).join(' '))), React.createElement("br", null), React.createElement("br", null), React.createElement("label", { htmlFor: "email" }, t_("email"), " ", React.createElement("br", null), React.createElement("input", { onChange: this.updateField, onBlur: this.blurField, id: "email", type: "email", name: "email", value: formData.email }), errorData.email.length > 0 && React.createElement("p", { className: "error" }, errorData.email.map(function (e) {
+                return t_('form_validation.' + e);
+            }).join(' '))), React.createElement("br", null), React.createElement("br", null), React.createElement("label", { htmlFor: "password" }, t_("password"), " ", React.createElement("br", null), React.createElement("input", { onChange: this.updateField, onBlur: this.blurField, id: "password", type: "password", name: "password", value: formData.password }), errorData.password.length > 0 && React.createElement("p", { className: "error" }, errorData.password.map(function (e) {
+                return t_('form_validation.' + e);
+            }).join(' '))), React.createElement("br", null), React.createElement("br", null), React.createElement("label", { htmlFor: "magicword" }, t_("magicword"), " ", React.createElement("br", null), React.createElement("input", { onChange: this.updateField, onBlur: this.blurField, id: "magicword", type: "text", name: "magicword", value: formData.magicword }), errorData.magicword.length > 0 && React.createElement("p", { className: "error" }, errorData.magicword.map(function (e) {
+                return t_('form_validation.' + e);
+            }).join(' '))), React.createElement("br", null), React.createElement("br", null), React.createElement("button", { type: "submit" }, t_('submit_user')));
         }
     }], [{
         key: "preLoad",
         value: function preLoad(state, actions) {
-            actions.forms.init(FORM_KEY);
             return Promise.resolve(true);
         }
     }]);
     return RegistrationPage;
 }(React.Component);
 
-var RegistrationForm = new OffsideAppContainer.FormDefinition("registration");
-var registrationStep = new OffsideAppContainer.FormStepDefinition(STEP_KEY);
+var RegistrationForm = new offsiderAppContainer.FormDefinition("registration");
+var registrationStep = new offsiderAppContainer.FormStepDefinition(STEP_KEY);
 function magicWordProvided(value, formState) {
     console.log('magic word check', value);
     if (value != "please") {
-        return Promise.reject(new OffsideAppContainer.FormError("You didn't say the magic word."));
+        return Promise.reject(new offsiderAppContainer.FormError("You didn't say the magic word."));
     }
     return Promise.resolve(true);
 }
 RegistrationForm.addStep(STEP_KEY, registrationStep);
-registrationStep.addField("username", new OffsideAppContainer.FormFieldDefinition("text", true, OffsideAppContainer.FormValidationStyle.OnBlur));
-registrationStep.addField("email", new OffsideAppContainer.FormFieldDefinition("email", true, OffsideAppContainer.FormValidationStyle.WhileEditing));
-registrationStep.addField("password", new OffsideAppContainer.FormFieldDefinition("password", true, OffsideAppContainer.FormValidationStyle.WhileEditing));
-registrationStep.addField("magicword", new OffsideAppContainer.FormFieldDefinition("magicword", true, OffsideAppContainer.FormValidationStyle.OnStepEnd, [magicWordProvided]));
+registrationStep.addField("username", new offsiderAppContainer.FormFieldDefinition("text", true, offsiderAppContainer.FormValidationStyle.OnBlur));
+registrationStep.addField("email", new offsiderAppContainer.FormFieldDefinition("email", true, offsiderAppContainer.FormValidationStyle.WhileEditing));
+registrationStep.addField("password", new offsiderAppContainer.FormFieldDefinition("password", true, offsiderAppContainer.FormValidationStyle.WhileEditing));
+registrationStep.addField("magicword", new offsiderAppContainer.FormFieldDefinition("magicword", true, offsiderAppContainer.FormValidationStyle.OnStepEnd, [magicWordProvided]));
 
 var NotFoundPage = function (_React$Component) {
     inherits(NotFoundPage, _React$Component);
@@ -554,20 +564,20 @@ var uiActions = {
 
 /// <reference path="../dist/offside-app-container.d.ts" />
 var enLang = require("json!./translation.json");
-var app = new OffsideAppContainer__default();
+console.log(offsiderAppContainer.OffsideAppContainer);
+var app = new offsiderAppContainer.OffsideAppContainer();
 var container = document.getElementById("app-container");
 app.setBusinessDispatch(setupBusinessStore(app));
 app.setBusinessActions(businessActions);
-app.addForm(RegistrationForm);
 app.setUiDispatch(setupUiStore(app));
 app.setUiActions(uiActions);
-var placeholderComms = new OffsideAppContainer.CommsChannel("placeholder", "http://jsonplaceholder.typicode.com", {}, function (req) {
+var placeholderComms = new offsiderAppContainer.CommsChannel("placeholder", "http://jsonplaceholder.typicode.com", {}, function (req) {
     return;
 }, function (req) {
     return JSON.parse(req.responseText);
 });
 app.addCommsChannel(placeholderComms);
-var mainUI = new OffsideAppContainer.UIContext("");
+var mainUI = new offsiderAppContainer.UIContext("");
 mainUI.addChrome("header", reactChrome(Header));
 mainUI.addChrome("footer", reactChrome(Footer));
 mainUI.setRenderOrder(["header", "**views", "footer"]);

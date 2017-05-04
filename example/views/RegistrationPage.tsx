@@ -1,6 +1,7 @@
 import {
   FormDefinition, FormStepDefinition, FormFieldDefinition,
   FormValidationStyle, FormError,
+  FormInstance,
 } from "offsider-app-container"
 import React from "react"
 import ReactDOM from "react-dom"
@@ -14,31 +15,36 @@ const STEP_KEY = "default"
 
 export default class RegistrationPage extends React.Component<ExampleAppProps, any> {
   static preLoad (state: ExampleAppState, actions: ExampleAppActions) {
-    actions.forms.init(FORM_KEY)
     return Promise.resolve(true)
   }
 
   constructor (props, context) {
     super(props, context)
+    this._form = new FormInstance<any>(
+      RegistrationForm,
+      {},
+      (newFormData) => { this.setState({formData: newFormData}) }
+    )
     this.updateField = this.updateField.bind(this)
     this.blurField = this.blurField.bind(this)
     this.submitForm = this.submitForm.bind(this)
+    this.state = {formData: this._form.formData}
   }
 
   updateField (e) {
     const {actions} = this.props
-    actions.forms.updateField(FORM_KEY, STEP_KEY, e.target.name, e.target.value)
+    this._form.updateField(STEP_KEY, e.target.name, e.target.value)
   }
 
   blurField (e) {
     const {actions} = this.props
-    actions.forms.blurField(FORM_KEY, STEP_KEY, e.target.name)
+    this._form.blurField(STEP_KEY, e.target.name)
   }
 
   submitForm (e) {
     e.preventDefault()
     const {actions} = this.props
-    actions.forms.submitStep(FORM_KEY, STEP_KEY).then((data) => {
+    this._form.submitStep(STEP_KEY).then((data) => {
       console.log(data, 'submit form')
     }, (errors) => {
       console.log(errors, 'error')
@@ -47,9 +53,10 @@ export default class RegistrationPage extends React.Component<ExampleAppProps, a
 
   render () {
     const {l10n, routes, forms, businessData, actions} = this.props
-    const formData = forms[FORM_KEY].steps[STEP_KEY].data
-    const errorData = forms[FORM_KEY].steps[STEP_KEY].errors
-    const warnData = forms[FORM_KEY].steps[STEP_KEY].warnings
+    const form = this.state.formData
+    const formData = form.steps[STEP_KEY].data
+    const errorData = form.steps[STEP_KEY].errors
+    const warnData = form.steps[STEP_KEY].warnings
     const t_ = l10n.translate
 
     console.log(errorData)
@@ -65,7 +72,7 @@ export default class RegistrationPage extends React.Component<ExampleAppProps, a
                name="username" value={formData.username} />
         {(errorData.username.length > 0) && <p
           className="error"
-        >{errorData.username.join(' ')}</p>}
+        >{errorData.username.map((e) => t_('form_validation.' + e)).join(' ')}</p>}
       </label>
 
       <br /><br />
@@ -78,7 +85,7 @@ export default class RegistrationPage extends React.Component<ExampleAppProps, a
                name="email" value={formData.email} />
         {(errorData.email.length > 0) && <p
           className="error"
-        >{errorData.email.join(' ')}</p>}
+        >{errorData.email.map((e) => t_('form_validation.' + e)).join(' ')}</p>}
       </label>
 
       <br /><br />
@@ -92,7 +99,7 @@ export default class RegistrationPage extends React.Component<ExampleAppProps, a
                name="password" value={formData.password} />
         {(errorData.password.length > 0) && <p
           className="error"
-        >{errorData.password.join(' ')}</p>}
+        >{errorData.password.map((e) => t_('form_validation.' + e)).join(' ')}</p>}
       </label>
 
       <br /><br />
@@ -106,7 +113,7 @@ export default class RegistrationPage extends React.Component<ExampleAppProps, a
                name="magicword" value={formData.magicword} />
         {(errorData.magicword.length > 0) && <p
           className="error"
-        >{errorData.magicword.join(' ')}</p>}
+        >{errorData.magicword.map((e) => t_('form_validation.' + e)).join(' ')}</p>}
       </label>
 
       <br /><br />

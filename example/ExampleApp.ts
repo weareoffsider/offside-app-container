@@ -1,6 +1,6 @@
 /// <reference path="../dist/offside-app-container.d.ts" />
 
-import OffsideAppContainer, {UIContext, CommsChannel} from "offsider-app-container"
+import {OffsideAppContainer, UIContext, CommsChannel} from "offsider-app-container"
 import Header from "./chrome/Header"
 import Footer from "./chrome/Footer"
 import HomePage from "./views/HomePage"
@@ -17,13 +17,12 @@ import {BusinessData, UIData, UIChromeData} from "./ExampleAppData"
 import setupBusinessStore, {businessActions} from "./BusinessStore"
 import setupUiStore, {uiActions} from "./UIStore"
 
+console.log(OffsideAppContainer)
 const app = new OffsideAppContainer<BusinessData, UIData, UIChromeData, any, any>()
 const container = document.getElementById("app-container")
 
 app.setBusinessDispatch(setupBusinessStore(app))
 app.setBusinessActions(businessActions)
-
-app.addForm(RegistrationForm)
 
 app.setUiDispatch(setupUiStore(app))
 app.setUiActions(uiActions)

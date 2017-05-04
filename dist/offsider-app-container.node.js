@@ -547,26 +547,20 @@ var FormWarning = function (_Error2) {
 
     return FormWarning;
 }(Error);
-function fieldRequired(value, formState, appState, appActions) {
-    var l10n = appState.l10n;
-    var translate = l10n.translate;
-
+function fieldRequired(value, formState, stateData) {
     if (value === null || value === undefined || value === "") {
-        return Promise.reject(new FormError(translate('form_validation.field_required')));
+        return Promise.reject(new FormError('field_required'));
     }
     return Promise.resolve(true);
 }
-function emailValidate(value, formState, appState, appActions) {
-    var l10n = appState.l10n;
-    var translate = l10n.translate;
-
+function emailValidate(value, formState, stateData) {
     if (!value) {
         return Promise.resolve(true);
     }
     var hasAt = value.indexOf('@') > 0;
     var hasDot = hasAt ? value.split('@')[1].indexOf('.') > 0 : false;
     if (!hasAt || !hasDot) {
-        return Promise.reject(new FormError(translate('form_validation.invalid_email')));
+        return Promise.reject(new FormError('invalid_email'));
     }
     return Promise.resolve(true);
 }
@@ -594,7 +588,7 @@ var FormDefinition = function () {
         }
     }, {
         key: "getInitState",
-        value: function getInitState(formType, formKey) {
+        value: function getInitState() {
             var _this = this;
 
             var steps = {};
@@ -602,8 +596,8 @@ var FormDefinition = function () {
                 steps[stepKey] = _this.steps[stepKey].getInitState();
             });
             return {
-                formType: formType,
-                formKey: formKey,
+                // formType,
+                // formKey,
                 currentStep: this.stepOrder[0],
                 complete: false,
                 steps: steps
@@ -664,6 +658,111 @@ var FormFieldDefinition = function FormFieldDefinition(fieldType) {
     }
     this.validators = this.validators.concat(extraValidators);
 };
+
+var FormInstance = function () {
+    function FormInstance(formDefinition, validationData, onUpdate) {
+        classCallCheck(this, FormInstance);
+
+        this.formDefinition = formDefinition;
+        this.validationData = validationData;
+        this.onUpdate = onUpdate;
+        this.formData = formDefinition.getInitState();
+        console.log(this.formData);
+    }
+
+    createClass(FormInstance, [{
+        key: "updateFormState",
+        value: function updateFormState(newData) {
+            this.formData = newData;
+            this.onUpdate(newData);
+        }
+    }, {
+        key: "updateValidationData",
+        value: function updateValidationData(valData) {
+            this.validationData = valData;
+        }
+    }, {
+        key: "updateField",
+        value: function updateField(stepKey, fieldKey, value) {
+            var formState = lodash.cloneDeep(this.formData);
+            var form = this.formDefinition;
+            var field = form.steps[stepKey].fields[fieldKey];
+            formState.steps[stepKey].data[fieldKey] = value;
+            this.updateFormState(formState);
+            if (field.validationStyle === exports.FormValidationStyle.WhileEditing) {
+                this.validateField(stepKey, fieldKey);
+            }
+        }
+    }, {
+        key: "blurField",
+        value: function blurField(stepKey, fieldKey) {
+            var formState = lodash.cloneDeep(this.formData);
+            var form = this.formDefinition;
+            var field = form.steps[stepKey].fields[fieldKey];
+            if (field.validationStyle === exports.FormValidationStyle.OnBlur || field.validationStyle === exports.FormValidationStyle.WhileEditing) {
+                this.validateField(stepKey, fieldKey);
+            }
+        }
+    }, {
+        key: "validateField",
+        value: function validateField(stepKey, fieldKey) {
+            var _this = this;
+
+            var startState = lodash.cloneDeep(this.formData);
+            var form = this.formDefinition;
+            var field = form.steps[stepKey].fields[fieldKey];
+            var value = startState.steps[stepKey].data[fieldKey];
+            console.log("FormInstance :: validating " + stepKey + "." + fieldKey + ":", value);
+            return Promise.all(field.validators.map(function (validator) {
+                return validator(value, startState, _this.validationData);
+            })).then(function (results) {
+                var formState = lodash.cloneDeep(_this.formData);
+                formState.steps[stepKey].errors[fieldKey] = [];
+                formState.steps[stepKey].warnings[fieldKey] = [];
+                _this.updateFormState(formState);
+                return true;
+            }, function (error) {
+                var formState = lodash.cloneDeep(_this.formData);
+                if (error.name === "FormError") {
+                    formState.steps[stepKey].errors[fieldKey] = [error.message];
+                } else if (error.name === "FormWarning") {
+                    formState.steps[stepKey].warnings[fieldKey] = [error.message];
+                }
+                _this.updateFormState(formState);
+                return error;
+            });
+        }
+    }, {
+        key: "submitStep",
+        value: function submitStep(stepKey) {
+            var _this2 = this;
+
+            var formState = lodash.cloneDeep(this.formState);
+            var form = this.formDefinition;
+            var fieldKeys = Object.keys(form.steps[stepKey].fields);
+            return Promise.all(fieldKeys.map(function (fieldKey) {
+                return _this2.validateField(stepKey, fieldKey);
+            })).then(function (results) {
+                var formState = lodash.cloneDeep(_this2.formState);
+                if (results.every(function (r) {
+                    return r === true;
+                })) {
+                    var currentIx = form.stepOrder.indexOf(formState.currentStep);
+                    if (currentIx < form.stepOrder.length - 1) {
+                        formState.currentStep = form.stepOrder[currentIx + 1];
+                    } else {
+                        formState.complete = true;
+                    }
+                    _this2.updateFormState(formState);
+                    return Promise.resolve(formState);
+                } else {
+                    return Promise.reject(formState.steps[stepKey].errors);
+                }
+            });
+        }
+    }]);
+    return FormInstance;
+}();
 
 /* RouteTable
  *
@@ -757,165 +856,6 @@ var RouteMatcher = function () {
         }
     }]);
     return RouteMatcher;
-}();
-
-var FormManager = function () {
-    function FormManager() {
-        classCallCheck(this, FormManager);
-
-        this.formRegistry = {};
-    }
-
-    createClass(FormManager, [{
-        key: "setStateGetter",
-        value: function setStateGetter(func) {
-            this.getAppState = func;
-        }
-    }, {
-        key: "setActorGetter",
-        value: function setActorGetter(func) {
-            this.getAppActor = func;
-        }
-    }, {
-        key: "setStateUpdater",
-        value: function setStateUpdater(func) {
-            this.updateFormState = func;
-        }
-    }, {
-        key: "addForm",
-        value: function addForm(form) {
-            this.formRegistry[form.name] = form;
-        }
-    }, {
-        key: "readyNewState",
-        value: function readyNewState() {
-            var _getAppState = this.getAppState();
-
-            var forms = _getAppState.forms;
-
-            var newForms = {};
-            Object.keys(forms).forEach(function (key) {
-                newForms[key] = forms[key];
-            });
-            return newForms;
-        }
-    }, {
-        key: "init",
-        value: function init(formType, formKey) {
-            var form = this.formRegistry[formType];
-            var newForms = this.readyNewState();
-            if (!form) {
-                throw new Error("Form named '" + formType + "' was not found.");
-            }
-            var key = formKey || formType;
-            newForms[key] = form.getInitState(formType, key);
-            this.updateFormState(newForms);
-        }
-    }, {
-        key: "updateField",
-        value: function updateField(formKey, stepKey, fieldKey, value) {
-            var newForms = this.readyNewState();
-            var formState = lodash.cloneDeep(newForms[formKey]);
-            var form = this.formRegistry[formState.formType];
-            var field = form.steps[stepKey].fields[fieldKey];
-            formState.steps[stepKey].data[fieldKey] = value;
-            newForms[formKey] = formState;
-            this.updateFormState(newForms);
-            if (field.validationStyle === exports.FormValidationStyle.WhileEditing) {
-                this.validateField(formKey, stepKey, fieldKey);
-            }
-        }
-    }, {
-        key: "blurField",
-        value: function blurField(formKey, stepKey, fieldKey) {
-            var newForms = this.readyNewState();
-            var formState = lodash.cloneDeep(newForms[formKey]);
-            var form = this.formRegistry[formState.formType];
-            var field = form.steps[stepKey].fields[fieldKey];
-            if (field.validationStyle === exports.FormValidationStyle.OnBlur || field.validationStyle === exports.FormValidationStyle.WhileEditing) {
-                this.validateField(formKey, stepKey, fieldKey);
-            }
-        }
-    }, {
-        key: "validateField",
-        value: function validateField(formKey, stepKey, fieldKey) {
-            var _this = this;
-
-            var startState = this.readyNewState()[formKey];
-            var form = this.formRegistry[startState.formType];
-            var field = form.steps[stepKey].fields[fieldKey];
-            var value = startState.steps[stepKey].data[fieldKey];
-            var appState = this.getAppState();
-            var appActor = this.getAppActor();
-            console.log("FormManager :: validating " + formKey + "." + stepKey + "." + fieldKey + ":", value);
-            return Promise.all(field.validators.map(function (validator) {
-                return validator(value, startState, appState, appActor);
-            })).then(function (results) {
-                var newForms = _this.readyNewState();
-                var formState = lodash.cloneDeep(newForms[formKey]);
-                formState.steps[stepKey].errors[fieldKey] = [];
-                formState.steps[stepKey].warnings[fieldKey] = [];
-                newForms[formKey] = formState;
-                _this.updateFormState(newForms);
-                return true;
-            }, function (error) {
-                var newForms = _this.readyNewState();
-                var formState = lodash.cloneDeep(newForms[formKey]);
-                if (error.name === "FormError") {
-                    formState.steps[stepKey].errors[fieldKey] = [error.message];
-                    newForms[formKey] = formState;
-                } else if (error.name === "FormWarning") {
-                    formState.steps[stepKey].warnings[fieldKey] = [error.message];
-                    newForms[formKey] = formState;
-                }
-                _this.updateFormState(newForms);
-                return error;
-            });
-        }
-    }, {
-        key: "submitStep",
-        value: function submitStep(formKey, stepKey) {
-            var _this2 = this;
-
-            var newForms = this.readyNewState();
-            var formState = lodash.cloneDeep(newForms[formKey]);
-            var form = this.formRegistry[formState.formType];
-            var fieldKeys = Object.keys(form.steps[stepKey].fields);
-            return Promise.all(fieldKeys.map(function (fieldKey) {
-                return _this2.validateField(formKey, stepKey, fieldKey);
-            })).then(function (results) {
-                var newForms = _this2.readyNewState();
-                var formState = lodash.cloneDeep(newForms[formKey]);
-                if (results.every(function (r) {
-                    return r === true;
-                })) {
-                    var currentIx = form.stepOrder.indexOf(formState.currentStep);
-                    if (currentIx < form.stepOrder.length - 1) {
-                        formState.currentStep = form.stepOrder[currentIx + 1];
-                    } else {
-                        formState.complete = true;
-                    }
-                    newForms[formKey] = formState;
-                    _this2.updateFormState(newForms);
-                    return Promise.resolve(formState);
-                } else {
-                    return Promise.reject(formState.steps[stepKey].errors);
-                }
-            });
-        }
-    }, {
-        key: "actions",
-        value: function actions() {
-            return {
-                init: this.init.bind(this),
-                updateField: this.updateField.bind(this),
-                blurField: this.blurField.bind(this),
-                validateField: this.validateField.bind(this),
-                submitStep: this.submitStep.bind(this)
-            };
-        }
-    }]);
-    return FormManager;
 }();
 
 var AppActor = function () {
@@ -1359,17 +1299,12 @@ var OffsideAppContainer = function () {
 
         this.uiContexts = {};
         this.commsChannels = {};
-        this.formManager = new FormManager();
-        this.formManager.setStateGetter(this.getState.bind(this));
-        this.formManager.setActorGetter(this.getActor.bind(this));
-        this.formManager.setStateUpdater(this.updateAppState.bind(this, "forms"));
         this.appActor = new AppActor();
         this.appActor.setStateGetter(this.getState.bind(this));
         this.appActor.setActionsGetter(this.getActions.bind(this));
         this.appActions = {
             ui: {},
             business: {},
-            forms: this.formManager.actions(),
             comms: {},
             routes: {
                 goTo: this.goToRoute.bind(this)
@@ -1378,11 +1313,6 @@ var OffsideAppContainer = function () {
     }
 
     createClass(OffsideAppContainer, [{
-        key: 'addForm',
-        value: function addForm(form) {
-            this.formManager.addForm(form);
-        }
-    }, {
         key: 'setBusinessDispatch',
         value: function setBusinessDispatch(func) {
             this.appActor.setBusinessDispatch(func);
@@ -1460,12 +1390,11 @@ var OffsideAppContainer = function () {
             var l10n = this.localizeSpawner.loadLocale(lang);
             var route = this.activeUI.getMatchFromRoute(window.location.pathname);
             var comms = {};
-            var forms = {};
             Object.keys(this.commsChannels).forEach(function (name) {
                 comms[name] = _this2.commsChannels[name].getState();
             });
             var routes = this.activeUI.routeTable;
-            this.appState = { l10n: l10n, uiData: uiData, businessData: businessData, forms: forms, route: route, routes: routes, comms: comms };
+            this.appState = { l10n: l10n, uiData: uiData, businessData: businessData, route: route, routes: routes, comms: comms };
             this.chromeState = chromeData;
         }
     }, {
@@ -1510,7 +1439,6 @@ var OffsideAppContainer = function () {
                 l10n: this.appState.l10n,
                 route: this.appState.route,
                 routes: this.appState.routes,
-                forms: this.appState.forms,
                 comms: this.appState.comms,
                 uiData: this.appState.uiData,
                 businessData: this.appState.businessData
@@ -1524,9 +1452,6 @@ var OffsideAppContainer = function () {
             }
             if (key === "comms") {
                 nextState.comms = updateValue;
-            }
-            if (key === "forms") {
-                nextState.forms = updateValue;
             }
             if (key === "uiData") {
                 nextState.uiData = updateValue;
@@ -1590,6 +1515,7 @@ var OffsideAppContainerObject = {
     CommsChannel: CommsChannel,
     Localize: LocalizeSpawner,
     AppActor: AppActor,
+    FormInstance: FormInstance,
     FormDefinition: FormDefinition,
     FormStepDefinition: FormStepDefinition,
     FormFieldDefinition: FormFieldDefinition,
@@ -1608,6 +1534,7 @@ exports.UIContext = UIContext;
 exports.CommsChannel = CommsChannel;
 exports.Localize = LocalizeSpawner;
 exports.AppActor = AppActor;
+exports.FormInstance = FormInstance;
 exports.FormDefinition = FormDefinition;
 exports.FormStepDefinition = FormStepDefinition;
 exports.FormFieldDefinition = FormFieldDefinition;

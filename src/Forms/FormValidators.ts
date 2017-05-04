@@ -16,34 +16,24 @@ export class FormWarning extends Error {
 }
 
 
-export function fieldRequired<BusinessData, UIData, BusinessAction, UIAction> (
+export function fieldRequired<StateData> (
   value: any,
   formState: FormState,
-  appState: AppState<BusinessData, UIData>,
-  appActions: AppActor<BusinessData, UIData, BusinessAction, UIAction>
+  stateData: StateData
 ): Promise<boolean> {
-  const {l10n} = appState
-  const {translate} = l10n
-
   if (value === null || value === undefined || value === "") {
-    return Promise.reject(new FormError(
-      translate('form_validation.field_required')
-    ))
+    return Promise.reject(new FormError('field_required'))
   }
 
   return Promise.resolve(true)
 }
 
 
-export function emailValidate<BusinessData, UIData, BusinessAction, UIAction> (
+export function emailValidate<StateData> (
   value: any,
   formState: FormState,
-  appState: AppState<BusinessData, UIData>,
-  appActions: AppActor<BusinessData, UIData, BusinessAction, UIAction>
+  stateData: StateData
 ): Promise<boolean> {
-  const {l10n} = appState
-  const {translate} = l10n
-
   if (!value) {
     return Promise.resolve(true)
   }
@@ -55,9 +45,7 @@ export function emailValidate<BusinessData, UIData, BusinessAction, UIAction> (
     : false
   
   if (!hasAt || !hasDot) {
-    return Promise.reject(new FormError(
-      translate('form_validation.invalid_email')
-    ))
+    return Promise.reject(new FormError('invalid_email'))
   }
 
   return Promise.resolve(true)

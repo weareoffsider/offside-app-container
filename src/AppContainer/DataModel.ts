@@ -7,7 +7,6 @@ export interface AppState<BusinessData, UIData> {
   l10n: LocalizeContext
   route?: RouteMatcher
   comms: {[key: string]: CommsChannelState}
-  forms: {[key: string]: FormState}
   routes: RouteTable
   uiData: UIData
   businessData: BusinessData
@@ -16,7 +15,6 @@ export interface AppState<BusinessData, UIData> {
 export interface AppActions<BusinessData, UIData> {
   business?: any
   ui?: any
-  forms?: any
   routes?: any
   screenStack?: any
   comms: {[key: string]: CommsActions}
