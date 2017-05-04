@@ -737,13 +737,13 @@ var FormInstance = function () {
         value: function submitStep(stepKey) {
             var _this2 = this;
 
-            var formState = lodash.cloneDeep(this.formState);
+            var formState = lodash.cloneDeep(this.formData);
             var form = this.formDefinition;
             var fieldKeys = Object.keys(form.steps[stepKey].fields);
             return Promise.all(fieldKeys.map(function (fieldKey) {
                 return _this2.validateField(stepKey, fieldKey);
             })).then(function (results) {
-                var formState = lodash.cloneDeep(_this2.formState);
+                var formState = lodash.cloneDeep(_this2.formData);
                 if (results.every(function (r) {
                     return r === true;
                 })) {

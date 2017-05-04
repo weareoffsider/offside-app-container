@@ -85,14 +85,14 @@ export default class FormInstance<ValidationData> {
   }
 
   submitStep (stepKey: string): Promise<boolean> {
-    const formState = cloneDeep(this.formState)
+    const formState = cloneDeep(this.formData)
     const form = this.formDefinition
     const fieldKeys = Object.keys(form.steps[stepKey].fields)
 
     return Promise.all(fieldKeys.map((fieldKey) => {
       return this.validateField(stepKey, fieldKey)
     })).then((results: any) =>  {
-      const formState = cloneDeep(this.formState)
+      const formState = cloneDeep(this.formData)
 
       if (results.every((r: any) => r === true)) {
         const currentIx = form.stepOrder.indexOf(formState.currentStep);
