@@ -156,59 +156,79 @@ var LocalizeContext = function () {
 var RequestNotFoundError = function (_Error) {
     inherits(RequestNotFoundError, _Error);
 
-    function RequestNotFoundError(message) {
+    function RequestNotFoundError(message, request) {
         classCallCheck(this, RequestNotFoundError);
 
         var _this = possibleConstructorReturn(this, (RequestNotFoundError.__proto__ || Object.getPrototypeOf(RequestNotFoundError)).call(this, message));
 
         _this.message = message;
+        _this.request = request;
         _this.name = "RequestNotFoundError";
         return _this;
     }
 
     return RequestNotFoundError;
 }(Error);
-var RequestForbiddenError = function (_Error2) {
-    inherits(RequestForbiddenError, _Error2);
+var RequestClientError$1 = function (_Error2) {
+    inherits(RequestClientError, _Error2);
 
-    function RequestForbiddenError(message) {
-        classCallCheck(this, RequestForbiddenError);
+    function RequestClientError(message, request) {
+        classCallCheck(this, RequestClientError);
 
-        var _this2 = possibleConstructorReturn(this, (RequestForbiddenError.__proto__ || Object.getPrototypeOf(RequestForbiddenError)).call(this, message));
+        var _this2 = possibleConstructorReturn(this, (RequestClientError.__proto__ || Object.getPrototypeOf(RequestClientError)).call(this, message));
 
         _this2.message = message;
-        _this2.name = "RequestForbiddenError";
+        _this2.request = request;
+        _this2.name = "RequestClientError";
         return _this2;
+    }
+
+    return RequestClientError;
+}(Error);
+var RequestForbiddenError = function (_Error3) {
+    inherits(RequestForbiddenError, _Error3);
+
+    function RequestForbiddenError(message, request) {
+        classCallCheck(this, RequestForbiddenError);
+
+        var _this3 = possibleConstructorReturn(this, (RequestForbiddenError.__proto__ || Object.getPrototypeOf(RequestForbiddenError)).call(this, message));
+
+        _this3.message = message;
+        _this3.request = request;
+        _this3.name = "RequestForbiddenError";
+        return _this3;
     }
 
     return RequestForbiddenError;
 }(Error);
-var RequestOfflineError = function (_Error3) {
-    inherits(RequestOfflineError, _Error3);
+var RequestOfflineError = function (_Error4) {
+    inherits(RequestOfflineError, _Error4);
 
-    function RequestOfflineError(message) {
+    function RequestOfflineError(message, request) {
         classCallCheck(this, RequestOfflineError);
 
-        var _this3 = possibleConstructorReturn(this, (RequestOfflineError.__proto__ || Object.getPrototypeOf(RequestOfflineError)).call(this, message));
+        var _this4 = possibleConstructorReturn(this, (RequestOfflineError.__proto__ || Object.getPrototypeOf(RequestOfflineError)).call(this, message));
 
-        _this3.message = message;
-        _this3.name = "RequestOfflineError";
-        return _this3;
+        _this4.message = message;
+        _this4.request = request;
+        _this4.name = "RequestOfflineError";
+        return _this4;
     }
 
     return RequestOfflineError;
 }(Error);
-var RequestServerError = function (_Error4) {
-    inherits(RequestServerError, _Error4);
+var RequestServerError = function (_Error5) {
+    inherits(RequestServerError, _Error5);
 
-    function RequestServerError(message) {
+    function RequestServerError(message, request) {
         classCallCheck(this, RequestServerError);
 
-        var _this4 = possibleConstructorReturn(this, (RequestServerError.__proto__ || Object.getPrototypeOf(RequestServerError)).call(this, message));
+        var _this5 = possibleConstructorReturn(this, (RequestServerError.__proto__ || Object.getPrototypeOf(RequestServerError)).call(this, message));
 
-        _this4.message = message;
-        _this4.name = "RequestServerError";
-        return _this4;
+        _this5.message = message;
+        _this5.request = request;
+        _this5.name = "RequestServerError";
+        return _this5;
     }
 
     return RequestServerError;
@@ -223,16 +243,19 @@ var CommsChannelStatus;
 function defaultErrorProcessing(req, commData) {
     console.log("ERROR PROCESS", req);
     if (req.status === 404) {
-        return new RequestNotFoundError(req.responseURL);
+        return new RequestNotFoundError(req.responseURL, req);
     }
     if (req.status === 403) {
-        return new RequestForbiddenError(req.responseURL);
+        return new RequestForbiddenError(req.responseURL, req);
+    }
+    if (req.status === 400) {
+        return new RequestClientError(req.responseURL, req);
     }
     if (req.status >= 500) {
-        return new RequestServerError(req.responseURL);
+        return new RequestServerError(req.responseURL, req);
     }
     if (req.status === 0) {
-        return new RequestOfflineError(req.responseURL);
+        return new RequestOfflineError(req.responseURL, req);
     }
     return null;
 }

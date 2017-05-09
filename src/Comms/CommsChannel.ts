@@ -39,19 +39,23 @@ export function defaultErrorProcessing<CommData> (
 ): any {
   console.log("ERROR PROCESS", req)
   if (req.status === 404) {
-    return new RequestNotFoundError(req.responseURL)
+    return new RequestNotFoundError(req.responseURL, req)
   }
 
   if (req.status === 403) {
-    return new RequestForbiddenError(req.responseURL)
+    return new RequestForbiddenError(req.responseURL, req)
+  }
+
+  if (req.status === 400) {
+    return new RequestClientError(req.responseURL, req)
   }
 
   if (req.status >= 500) {
-    return new RequestServerError(req.responseURL)
+    return new RequestServerError(req.responseURL, req)
   }
 
   if (req.status === 0) {
-    return new RequestOfflineError(req.responseURL)
+    return new RequestOfflineError(req.responseURL, req)
   }
 
   return null

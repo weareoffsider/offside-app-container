@@ -22,23 +22,33 @@ declare module "AppContainer/Localize" {
 declare module "Comms/Errors" {
     export class RequestNotFoundError extends Error {
         readonly message: string;
+        request: XMLHttpRequest;
         name: string;
-        constructor(message: string);
+        constructor(message: string, request: XMLHttpRequest);
+    }
+    export class RequestClientError extends Error {
+        readonly message: string;
+        request: XMLHttpRequest;
+        name: string;
+        constructor(message: string, request: XMLHttpRequest);
     }
     export class RequestForbiddenError extends Error {
         readonly message: string;
+        request: XMLHttpRequest;
         name: string;
-        constructor(message: string);
+        constructor(message: string, request: XMLHttpRequest);
     }
     export class RequestOfflineError extends Error {
         readonly message: string;
+        request: XMLHttpRequest;
         name: string;
-        constructor(message: string);
+        constructor(message: string, request: XMLHttpRequest);
     }
     export class RequestServerError extends Error {
         readonly message: string;
+        request: XMLHttpRequest;
         name: string;
-        constructor(message: string);
+        constructor(message: string, request: XMLHttpRequest);
     }
 }
 declare module "Comms/CommsChannel" {
