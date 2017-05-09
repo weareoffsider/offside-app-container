@@ -84,6 +84,12 @@ export default class FormInstance<ValidationData> {
     })
   }
 
+  addFieldError (stepKey: string, fieldKey: string, errorText: string): Promise<boolean> {
+    const formState = cloneDeep(this.formData)
+    formState.steps[stepKey].errors[fieldKey] = [errorText]
+    this.updateFormState(formState)
+  }
+
   submitStep (stepKey: string): Promise<boolean> {
     const formState = cloneDeep(this.formData)
     const form = this.formDefinition

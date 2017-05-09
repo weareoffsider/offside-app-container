@@ -249,6 +249,7 @@ declare module "Forms/FormInstance" {
         updateField(stepKey: string, fieldKey: string, value: any): void;
         blurField(stepKey: string, fieldKey: string): void;
         validateField(stepKey: string, fieldKey: string): Promise<boolean>;
+        addFieldError(stepKey: string, fieldKey: string, errorText: string): Promise<boolean>;
         submitStep(stepKey: string): Promise<boolean>;
     }
 }

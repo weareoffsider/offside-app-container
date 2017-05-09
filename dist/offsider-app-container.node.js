@@ -756,6 +756,13 @@ var FormInstance = function () {
             });
         }
     }, {
+        key: "addFieldError",
+        value: function addFieldError(stepKey, fieldKey, errorText) {
+            var formState = lodash.cloneDeep(this.formData);
+            formState.steps[stepKey].errors[fieldKey] = [errorText];
+            this.updateFormState(formState);
+        }
+    }, {
         key: "submitStep",
         value: function submitStep(stepKey) {
             var _this2 = this;
