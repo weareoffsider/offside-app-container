@@ -253,6 +253,10 @@ export default class UIContext<BusinessData, UIData, UIChromeData,
             return this.renderErrorView(
               "**403", container, route, props, chromeProps, appActions, resolve
             )
+          } else if (error.name === "RequestClientError" && this.viewSet["**400"]) {
+            return this.renderErrorView(
+              "**400", container, route, props, chromeProps, appActions, resolve
+            )
           } else if (error.name === "RequestServerError" && this.viewSet["**500"]) {
             return this.renderErrorView(
               "**500", container, route, props, chromeProps, appActions, resolve

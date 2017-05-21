@@ -1,6 +1,7 @@
 import {
   RequestServerError, RequestOfflineError,
   RequestForbiddenError, RequestNotFoundError
+  RequestClientError,
 } from './Errors'
 import {forOwn} from 'lodash'
 

@@ -169,7 +169,7 @@ var RequestNotFoundError = function (_Error) {
 
     return RequestNotFoundError;
 }(Error);
-var RequestClientError$1 = function (_Error2) {
+var RequestClientError = function (_Error2) {
     inherits(RequestClientError, _Error2);
 
     function RequestClientError(message, request) {
@@ -1274,6 +1274,8 @@ var UIContext = function () {
                         return _this4.renderErrorView("**404", container, route, props, chromeProps, appActions, resolve);
                     } else if (error.name === "RequestForbiddenError" && _this4.viewSet["**403"]) {
                         return _this4.renderErrorView("**403", container, route, props, chromeProps, appActions, resolve);
+                    } else if (error.name === "RequestClientError" && _this4.viewSet["**400"]) {
+                        return _this4.renderErrorView("**400", container, route, props, chromeProps, appActions, resolve);
                     } else if (error.name === "RequestServerError" && _this4.viewSet["**500"]) {
                         return _this4.renderErrorView("**500", container, route, props, chromeProps, appActions, resolve);
                     } else if (error.name === "RequestOfflineError" && _this4.viewSet["**offline"]) {
