@@ -19,7 +19,7 @@ export default class OffsideAppContainer<
   public localizeSpawner: Localize
   public activeUI: UIContext<BusinessData, UIData, UIChromeData, any, any, any>
   public uiContexts: {[key: string]: UIContext<BusinessData, UIData, UIChromeData, any, any, any>}
-  public commsChannels: {[key: string]: CommsChannel<any>}
+  public commsChannels: {[key: string]: CommsChannel}
   public appState: AppState<BusinessData, UIData>
   public chromeState: UIChromeData
   public appActions: AppActions<BusinessData, UIData>
@@ -64,7 +64,7 @@ export default class OffsideAppContainer<
     this.appActions.business = this.bindActor(actionObject)
   }
 
-  addCommsChannel(commsChannel: CommsChannel<any>) {
+  addCommsChannel(commsChannel: CommsChannel) {
     this.commsChannels[commsChannel.name] = commsChannel
     this.appActions.comms[commsChannel.name] = commsChannel.actions()
     commsChannel.setStateSetter(this.updateCommsState.bind(this))

@@ -35,8 +35,8 @@ export interface CommsChannelState {
 }
 
 
-export function defaultErrorProcessing<CommData> (
-  req: any, commData?: CommData
+export function defaultErrorProcessing (
+  req: any, commData?: any
 ): any {
   console.log("ERROR PROCESS", req)
   if (req.status === 404) {
@@ -63,17 +63,17 @@ export function defaultErrorProcessing<CommData> (
 }
 
 
-export default class CommsChannel<CommData> {
+export default class CommsChannel {
   private nextRequestKey: number
   private state: CommsChannelState
   private updateCommsState: (name: string, state: CommsChannelState) => void
 
   constructor (
     public name: string, public urlRoot: string,
-    public commData: CommData,
-    public prepareRequest: (req: XMLHttpRequest, commData?: CommData) => void,
-    public processSuccess: (req: XMLHttpRequest, commData?: CommData) => any,
-    public processError?: (req: XMLHttpRequest, commData?: CommData) => any
+    public commData: any,
+    public prepareRequest: (req: XMLHttpRequest, commData?: any) => void,
+    public processSuccess: (req: XMLHttpRequest, commData?: any) => any,
+    public processError?: (req: XMLHttpRequest, commData?: any) => any
   ) {
     this.nextRequestKey = 0
     this.state = {
