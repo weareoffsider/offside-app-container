@@ -133,8 +133,6 @@ declare module "Forms/FormData" {
         };
     }
     export interface FormState {
-        formType: string;
-        formKey: string;
         currentStep: string;
         complete: boolean;
         steps: {
@@ -226,12 +224,13 @@ declare module "Forms/FormDefinition" {
         readonly fieldType: string;
         readonly required: boolean;
         readonly validationStyle: FormValidationStyle;
-        readonly validators: Array<(value: any, formState: FormState, appState: AppState<BusinessData, UIData>, appActions: AppActor<BusinessData, UIData, BusinessAction, UIAction>) => Promise<boolean>>;
+        readonly validators: Array<(value: any, formState: FormState, appState: AppState<BusinessData, UIData>, appActions?: AppActor<BusinessData, UIData, BusinessAction, UIAction>) => Promise<boolean>>;
         constructor(fieldType: string, required?: boolean, validationStyle?: FormValidationStyle, extraValidators?: Array<(value: any, formState: FormState, appState: AppState<BusinessData, UIData>, appActions: AppActor<BusinessData, UIData, BusinessAction, UIAction>) => Promise<boolean>>);
     }
 }
 declare module "Forms/FormInstance" {
     import FormDefinition from "Forms/FormDefinition";
+    import { AppState } from "AppContainer/DataModel";
     export interface FormActions {
         init: (formType: string, formKey?: string) => void;
         updateField: (stepKey: string, fieldKey: string, value: any) => void;
@@ -239,17 +238,18 @@ declare module "Forms/FormInstance" {
         validateField: (stepKey: string, fieldKey: string) => Promise<boolean>;
         submitStep: (stepKey: string) => Promise<boolean>;
     }
-    export default class FormInstance<ValidationData> {
-        formDefinition: FormDefinition;
-        validationData: ValidationData;
+    export default class FormInstance<BusinessData, UIData, BusinessAction, UIAction, ValidationData> {
+        formDefinition: FormDefinition<BusinessData, UIData, BusinessAction, UIAction>;
+        validationData: AppState<BusinessData, UIData>;
         onUpdate: (formData: any) => void;
-        constructor(formDefinition: FormDefinition, validationData: ValidationData, onUpdate: (formData: any) => void);
+        formData: any;
+        constructor(formDefinition: FormDefinition<BusinessData, UIData, BusinessAction, UIAction>, validationData: AppState<BusinessData, UIData>, onUpdate: (formData: any) => void);
         updateFormState(newData: any): void;
-        updateValidationData(valData: ValidationData): void;
+        updateValidationData(valData: AppState<BusinessData, UIData>): void;
         updateField(stepKey: string, fieldKey: string, value: any): void;
         blurField(stepKey: string, fieldKey: string): void;
         validateField(stepKey: string, fieldKey: string): Promise<boolean>;
-        addFieldError(stepKey: string, fieldKey: string, errorText: string): Promise<boolean>;
+        addFieldError(stepKey: string, fieldKey: string, errorText: string): any;
         submitStep(stepKey: string): Promise<boolean>;
     }
 }

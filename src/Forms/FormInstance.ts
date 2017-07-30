@@ -11,10 +11,12 @@ export interface FormActions {
   submitStep: (stepKey: string) => Promise<boolean>
 }
 
-export default class FormInstance<ValidationData> {
+export default class FormInstance<BusinessData, UIData, BusinessAction, UIAction, ValidationData> {
+  public formData: any
+
   constructor (
-    public formDefinition: FormDefinition,
-    public validationData: ValidationData,
+    public formDefinition: FormDefinition<BusinessData, UIData, BusinessAction, UIAction>,
+    public validationData: AppState<BusinessData, UIData>,
     public onUpdate: (formData: any) => void
   ) {
     this.formData = formDefinition.getInitState()
@@ -26,7 +28,7 @@ export default class FormInstance<ValidationData> {
     this.onUpdate(newData)
   }
 
-  updateValidationData (valData: ValidationData) {
+  updateValidationData (valData: AppState<BusinessData, UIData>) {
     this.validationData = valData
   }
 
@@ -84,7 +86,7 @@ export default class FormInstance<ValidationData> {
     })
   }
 
-  addFieldError (stepKey: string, fieldKey: string, errorText: string): Promise<boolean> {
+  addFieldError (stepKey: string, fieldKey: string, errorText: string): any {
     const formState = cloneDeep(this.formData)
     formState.steps[stepKey].errors[fieldKey] = [errorText]
     this.updateFormState(formState)

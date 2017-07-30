@@ -93,7 +93,7 @@ export class FormFieldDefinition<
     value: any,
     formState: FormState,
     appState: AppState<BusinessData, UIData>,
-    appActions: AppActor<BusinessData, UIData, BusinessAction, UIAction>
+    appActions?: AppActor<BusinessData, UIData, BusinessAction, UIAction>
   ) => Promise<boolean>>
 
   constructor (
