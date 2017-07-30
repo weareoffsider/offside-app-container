@@ -76,18 +76,18 @@ declare module "Comms/CommsChannel" {
         status: CommsChannelStatus;
         statusString: string;
     }
-    export function defaultErrorProcessing<CommData>(req: any, commData?: CommData): any;
-    export default class CommsChannel<CommData> {
+    export function defaultErrorProcessing(req: any, commData?: any): any;
+    export default class CommsChannel {
         name: string;
         urlRoot: string;
-        commData: CommData;
-        private prepareRequest;
-        private processSuccess;
-        private processError;
+        commData: any;
+        prepareRequest: (req: XMLHttpRequest, commData?: any) => void;
+        processSuccess: (req: XMLHttpRequest, commData?: any) => any;
+        processError: (req: XMLHttpRequest, commData?: any) => any;
         private nextRequestKey;
         private state;
         private updateCommsState;
-        constructor(name: string, urlRoot: string, commData: CommData, prepareRequest: (req: XMLHttpRequest, commData?: CommData) => void, processSuccess: (req: XMLHttpRequest, commData?: CommData) => any, processError?: (req: XMLHttpRequest, commData?: CommData) => any);
+        constructor(name: string, urlRoot: string, commData: any, prepareRequest: (req: XMLHttpRequest, commData?: any) => void, processSuccess: (req: XMLHttpRequest, commData?: any) => any, processError?: (req: XMLHttpRequest, commData?: any) => any);
         setStateSetter(func: (name: string, state: CommsChannelState) => void): void;
         getState(): CommsChannelState;
         updateRequestState(key: number, request: CommsChannelRequest): void;
@@ -238,7 +238,7 @@ declare module "Forms/FormInstance" {
         validateField: (stepKey: string, fieldKey: string) => Promise<boolean>;
         submitStep: (stepKey: string) => Promise<boolean>;
     }
-    export default class FormInstance<BusinessData, UIData, BusinessAction, UIAction, ValidationData> {
+    export default class FormInstance<BusinessData, UIData, BusinessAction, UIAction> {
         formDefinition: FormDefinition<BusinessData, UIData, BusinessAction, UIAction>;
         validationData: AppState<BusinessData, UIData>;
         onUpdate: (formData: any) => void;
@@ -397,7 +397,7 @@ declare module "offsider-app-container" {
             [key: string]: UIContext<BusinessData, UIData, UIChromeData, any, any, any>;
         };
         commsChannels: {
-            [key: string]: CommsChannel<any>;
+            [key: string]: CommsChannel;
         };
         appState: AppState<BusinessData, UIData>;
         chromeState: UIChromeData;
@@ -407,7 +407,7 @@ declare module "offsider-app-container" {
         setBusinessDispatch(func: (a: BusinessAction) => void): void;
         bindActor(leaf: any): any;
         setBusinessActions(actionObject: any): void;
-        addCommsChannel(commsChannel: CommsChannel<any>): void;
+        addCommsChannel(commsChannel: CommsChannel): void;
         setUiDispatch(func: (a: UIAction) => void): void;
         setUiActions(actionObject: any): void;
         setupLocalisation(translationResources: any): void;

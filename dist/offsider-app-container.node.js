@@ -690,7 +690,6 @@ var FormInstance = function () {
         this.validationData = validationData;
         this.onUpdate = onUpdate;
         this.formData = formDefinition.getInitState();
-        console.log(this.formData);
     }
 
     createClass(FormInstance, [{
