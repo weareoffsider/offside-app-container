@@ -11,7 +11,7 @@ export interface FormActions {
   submitStep: (stepKey: string) => Promise<boolean>
 }
 
-export default class FormInstance<BusinessData, UIData, BusinessAction, UIAction, ValidationData> {
+export default class FormInstance<BusinessData, UIData, BusinessAction, UIAction> {
   public formData: any
 
   constructor (
@@ -20,7 +20,6 @@ export default class FormInstance<BusinessData, UIData, BusinessAction, UIAction
     public onUpdate: (formData: any) => void
   ) {
     this.formData = formDefinition.getInitState()
-    console.log(this.formData)
   }
 
   updateFormState (newData: any) {

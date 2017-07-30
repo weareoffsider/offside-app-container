@@ -71,9 +71,9 @@ export default class CommsChannel<CommData> {
   constructor (
     public name: string, public urlRoot: string,
     public commData: CommData,
-    private prepareRequest: (req: XMLHttpRequest, commData?: CommData) => void,
-    private processSuccess: (req: XMLHttpRequest, commData?: CommData) => any,
-    private processError?: (req: XMLHttpRequest, commData?: CommData) => any
+    public prepareRequest: (req: XMLHttpRequest, commData?: CommData) => void,
+    public processSuccess: (req: XMLHttpRequest, commData?: CommData) => any,
+    public processError?: (req: XMLHttpRequest, commData?: CommData) => any
   ) {
     this.nextRequestKey = 0
     this.state = {
