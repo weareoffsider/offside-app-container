@@ -304,7 +304,7 @@ export default class CommsChannel {
     })
   }
 
-  get (url: string): Promise<any> {
+  get (url: string, data: any): Promise<any> {
     const key = this.nextRequestKey++
     const method = 'GET'
     return new Promise((resolve, reject) => {
@@ -337,7 +337,13 @@ export default class CommsChannel {
       req.open("GET", `${this.urlRoot}${url}`)
 
       this.prepareRequest(req, this.commData)
-      req.send()
+
+      if (data) {
+        req.setRequestHeader("content-type", "application/json")
+        req.send(JSON.stringify(data))
+      } else {
+        req.send()
+      }
     })
   }
 

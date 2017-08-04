@@ -95,7 +95,7 @@ declare module "Comms/CommsChannel" {
         upload(url: string, data: any, method?: string): Promise<any>;
         put(url: string, data: any): Promise<any>;
         delete(url: string, data: any): Promise<any>;
-        get(url: string): Promise<any>;
+        get(url: string, data: any): Promise<any>;
         actions(): CommsActions;
     }
 }

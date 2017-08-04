@@ -492,7 +492,7 @@ var CommsChannel = function () {
         }
     }, {
         key: 'get',
-        value: function get(url) {
+        value: function get(url, data) {
             var _this5 = this;
 
             var key = this.nextRequestKey++;
@@ -522,7 +522,12 @@ var CommsChannel = function () {
                 }, false);
                 req.open("GET", '' + _this5.urlRoot + url);
                 _this5.prepareRequest(req, _this5.commData);
-                req.send();
+                if (data) {
+                    req.setRequestHeader("content-type", "application/json");
+                    req.send(JSON.stringify(data));
+                } else {
+                    req.send();
+                }
             });
         }
     }, {
