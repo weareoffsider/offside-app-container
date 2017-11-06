@@ -1268,7 +1268,11 @@ var UIContext = function () {
             var viewReadyPromise = new Promise(function (resolve, reject) {
                 view.preLoadData(props, appActions).then(function (state) {
                     console.log("Creating View", view);
-                    view.create(_this4.getLatestAppState(), chromeProps, appActions);
+                    _this4.chromeState = view.create(_this4.getLatestAppState(), chromeProps, appActions);
+                    Object.keys(_this4.activeChrome).forEach(function (name) {
+                        var chrome = _this4.activeChrome[name];
+                        chrome.update(_this4.getLatestAppState(), _this4.chromeState, appActions);
+                    });
                     view.postLoadData(_this4.getLatestAppState(), appActions);
                     resolve(view);
                 }, function (error) {

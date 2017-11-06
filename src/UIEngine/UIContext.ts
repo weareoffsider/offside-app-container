@@ -237,7 +237,13 @@ export default class UIContext<BusinessData, UIData, UIChromeData,
       view.preLoadData(props, appActions)
         .then((state) => {
           console.log("Creating View", view)
-          view.create(this.getLatestAppState(), chromeProps, appActions)
+          this.chromeState = view.create(this.getLatestAppState(), chromeProps, appActions)
+
+          Object.keys(this.activeChrome).forEach((name) => {
+            const chrome = this.activeChrome[name]
+            chrome.update(this.getLatestAppState(), this.chromeState, appActions)
+          })
+
           view.postLoadData(this.getLatestAppState(), appActions)
           resolve(view)
         }, (error) => {
