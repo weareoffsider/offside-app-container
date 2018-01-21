@@ -1553,6 +1553,10 @@ var OffsideAppContainerObject = {
     OffsideAppContainer: OffsideAppContainer,
     UIContext: UIContext,
     CommsChannel: CommsChannel,
+    CommsDefaultErrorProcessing: defaultErrorProcessing,
+    RequestServerError: RequestServerError, RequestOfflineError: RequestOfflineError,
+    RequestForbiddenError: RequestForbiddenError, RequestNotFoundError: RequestNotFoundError,
+    RequestClientError: RequestClientError,
     Localize: LocalizeSpawner,
     AppActor: AppActor,
     FormInstance: FormInstance,
@@ -1572,6 +1576,12 @@ if (typeof window !== "undefined") {
 exports['default'] = OffsideAppContainer;
 exports.UIContext = UIContext;
 exports.CommsChannel = CommsChannel;
+exports.defaultErrorProcessing = defaultErrorProcessing;
+exports.RequestServerError = RequestServerError;
+exports.RequestOfflineError = RequestOfflineError;
+exports.RequestForbiddenError = RequestForbiddenError;
+exports.RequestNotFoundError = RequestNotFoundError;
+exports.RequestClientError = RequestClientError;
 exports.Localize = LocalizeSpawner;
 exports.AppActor = AppActor;
 exports.FormInstance = FormInstance;

@@ -116,6 +116,10 @@ gulp.task("example:webpack", function () {
   )
 })
 
+gulp.task("build", [
+  "scripts", "definitions", "rollup", "example:html", "example:json",
+  "example:scripts"
+])
 
 gulp.task("default", [
   "scripts", "definitions", "rollup", "example:html", "example:json",

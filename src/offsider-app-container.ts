@@ -1,5 +1,10 @@
 import Localize, {LocalizeContext} from './AppContainer/Localize'
-import CommsChannel, {CommsChannelState} from './Comms/CommsChannel'
+import CommsChannel, {defaultErrorProcessing, CommsChannelState} from './Comms/CommsChannel'
+import {
+  RequestServerError, RequestOfflineError,
+  RequestForbiddenError, RequestNotFoundError,
+  RequestClientError,
+} from './Comms/Errors'
 import FormInstance from './Forms/FormInstance'
 import FormDefinition, {
   FormStepDefinition, FormFieldDefinition, FormValidationStyle,
@@ -225,6 +230,10 @@ const OffsideAppContainerObject = {
   OffsideAppContainer,
   UIContext,
   CommsChannel,
+  CommsDefaultErrorProcessing: defaultErrorProcessing,
+  RequestServerError, RequestOfflineError,
+  RequestForbiddenError, RequestNotFoundError,
+  RequestClientError,
   Localize,
   AppActor,
   FormInstance,
@@ -241,6 +250,10 @@ const OffsideAppContainerObject = {
 export {
   UIContext,
   CommsChannel,
+  defaultErrorProcessing,
+  RequestServerError, RequestOfflineError,
+  RequestForbiddenError, RequestNotFoundError,
+  RequestClientError,
   Localize,
   AppState,
   AppActions,

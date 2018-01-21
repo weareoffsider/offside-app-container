@@ -383,7 +383,8 @@ declare module "UIEngine/UIContext" {
 }
 declare module "offsider-app-container" {
     import Localize from "AppContainer/Localize";
-    import CommsChannel, { CommsChannelState } from "Comms/CommsChannel";
+    import CommsChannel, { defaultErrorProcessing, CommsChannelState } from "Comms/CommsChannel";
+    import { RequestServerError, RequestOfflineError, RequestForbiddenError, RequestNotFoundError, RequestClientError } from "Comms/Errors";
     import FormInstance from "Forms/FormInstance";
     import FormDefinition, { FormStepDefinition, FormFieldDefinition, FormValidationStyle } from "Forms/FormDefinition";
     import { FormError, FormWarning } from "Forms/FormValidators";
@@ -423,5 +424,5 @@ declare module "offsider-app-container" {
         setupRouteListeners(): void;
         goToRoute(path: string): void;
     }
-    export { UIContext, CommsChannel, Localize, AppState, AppActions, AppActor, FormInstance, FormDefinition, FormStepDefinition, FormFieldDefinition, FormValidationStyle, FormError, FormWarning, RouteTable, RouteMatcher };
+    export { UIContext, CommsChannel, defaultErrorProcessing, RequestServerError, RequestOfflineError, RequestForbiddenError, RequestNotFoundError, RequestClientError, Localize, AppState, AppActions, AppActor, FormInstance, FormDefinition, FormStepDefinition, FormFieldDefinition, FormValidationStyle, FormError, FormWarning, RouteTable, RouteMatcher };
 }
